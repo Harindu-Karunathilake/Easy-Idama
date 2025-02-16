@@ -30,7 +30,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   Align(
                     alignment: Alignment.centerLeft,
                     child: Text(
-                      "Create an Account",
+                      "Create Account",
                       style: Theme.of(context).textTheme.headlineSmall!.copyWith(
                             fontWeight: FontWeight.bold,
                           ),
