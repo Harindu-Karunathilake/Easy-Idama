@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'pages/signin.dart'; // Ensure this file is correctly located in the 'pages' folder
-
+ // Ensure this file is correctly located in the 'pages' folder
+import 'pages/landing.dart'; // Ensure this file is correctly located in the 'pages' folder
 void main() {
   runApp(const MyApp());
 }
@@ -13,7 +13,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: ThemeData(fontFamily: 'Poppins'),
-      home: SignInScreen(), // Set SignInScreen as the home screen
+      home: SplashScreen(), // Set SignInScreen as the home screen
     );
   }
 }
