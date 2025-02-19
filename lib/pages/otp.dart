@@ -3,13 +3,13 @@ import 'package:flutter/services.dart';
 
 class OtpScreen extends StatelessWidget {
   const OtpScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
-        
       ),
       body: SafeArea(
         child: SizedBox(
@@ -34,7 +34,6 @@ class OtpScreen extends StatelessWidget {
                     textAlign: TextAlign.center,
                     style: TextStyle(color: Color(0xFF757575)),
                   ),
-                  // const SizedBox(height: 16),
                   SizedBox(height: MediaQuery.of(context).size.height * 0.1),
                   const OtpForm(),
                   SizedBox(height: MediaQuery.of(context).size.height * 0.2),
@@ -90,13 +89,14 @@ class OtpForm extends StatelessWidget {
                   style: Theme.of(context).textTheme.titleLarge,
                   textAlign: TextAlign.center,
                   decoration: InputDecoration(
-                      hintText: "0",
-                      hintStyle: const TextStyle(color: Color(0xFF757575)),
-                      border: authOutlineInputBorder,
-                      enabledBorder: authOutlineInputBorder,
-                      focusedBorder: authOutlineInputBorder.copyWith(
-                          borderSide:
-                              const BorderSide(color: Color(0xFF1471D3)))),
+                    hintText: "0",
+                    hintStyle: const TextStyle(color: Color(0xFF757575)),
+                    border: authOutlineInputBorder,
+                    enabledBorder: authOutlineInputBorder,
+                    focusedBorder: authOutlineInputBorder.copyWith(
+                      borderSide: const BorderSide(color: Color(0xFF1471D3)),
+                    ),
+                  ),
                 ),
               ),
               SizedBox(
@@ -118,13 +118,14 @@ class OtpForm extends StatelessWidget {
                   style: Theme.of(context).textTheme.titleLarge,
                   textAlign: TextAlign.center,
                   decoration: InputDecoration(
-                      hintText: "0",
-                      hintStyle: const TextStyle(color: Color(0xFF757575)),
-                      border: authOutlineInputBorder,
-                      enabledBorder: authOutlineInputBorder,
-                      focusedBorder: authOutlineInputBorder.copyWith(
-                          borderSide:
-                              const BorderSide(color: Color(0xFF1471D3)))),
+                    hintText: "0",
+                    hintStyle: const TextStyle(color: Color(0xFF757575)),
+                    border: authOutlineInputBorder,
+                    enabledBorder: authOutlineInputBorder,
+                    focusedBorder: authOutlineInputBorder.copyWith(
+                      borderSide: const BorderSide(color: Color(0xFF1471D3)),
+                    ),
+                  ),
                 ),
               ),
               SizedBox(
@@ -146,13 +147,14 @@ class OtpForm extends StatelessWidget {
                   style: Theme.of(context).textTheme.titleLarge,
                   textAlign: TextAlign.center,
                   decoration: InputDecoration(
-                      hintText: "0",
-                      hintStyle: const TextStyle(color: Color(0xFF757575)),
-                      border: authOutlineInputBorder,
-                      enabledBorder: authOutlineInputBorder,
-                      focusedBorder: authOutlineInputBorder.copyWith(
-                          borderSide:
-                              const BorderSide(color: Color(0xFF1471D3)))),
+                    hintText: "0",
+                    hintStyle: const TextStyle(color: Color(0xFF757575)),
+                    border: authOutlineInputBorder,
+                    enabledBorder: authOutlineInputBorder,
+                    focusedBorder: authOutlineInputBorder.copyWith(
+                      borderSide: const BorderSide(color: Color(0xFF1471D3)),
+                    ),
+                  ),
                 ),
               ),
               SizedBox(
@@ -174,13 +176,14 @@ class OtpForm extends StatelessWidget {
                   style: Theme.of(context).textTheme.titleLarge,
                   textAlign: TextAlign.center,
                   decoration: InputDecoration(
-                      hintText: "0",
-                      hintStyle: const TextStyle(color: Color(0xFF757575)),
-                      border: authOutlineInputBorder,
-                      enabledBorder: authOutlineInputBorder,
-                      focusedBorder: authOutlineInputBorder.copyWith(
-                          borderSide:
-                              const BorderSide(color: Color(0xFF1471D3)))),
+                    hintText: "0",
+                    hintStyle: const TextStyle(color: Color(0xFF757575)),
+                    border: authOutlineInputBorder,
+                    enabledBorder: authOutlineInputBorder,
+                    focusedBorder: authOutlineInputBorder.copyWith(
+                      borderSide: const BorderSide(color: Color(0xFF1471D3)),
+                    ),
+                  ),
                 ),
               ),
             ],
@@ -197,15 +200,15 @@ class OtpForm extends StatelessWidget {
                 borderRadius: BorderRadius.all(Radius.circular(8)),
               ),
             ),
-            child: const Text("Verify", 
-            style: TextStyle(
-             fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-
-            )
+            child: const Text(
+              "Verify",
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+              ),
             ),
-          )
+          ),
         ],
       ),
     );
