@@ -85,7 +85,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 foregroundColor: Colors.white,
                 minimumSize: const Size(double.infinity, 40),
                 shape: const RoundedRectangleBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(10)),
+                  borderRadius: BorderRadius.all(Radius.circular(8)),
                 ),
               ),
               child: const Text("Continue"),

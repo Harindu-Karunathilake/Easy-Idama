@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'signin.dart';
+import 'otp.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -89,9 +90,14 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     return Center(
       child: ElevatedButton(
         onPressed: () {
-          if (_formKey.currentState!.validate()) {
-            // Handle password reset logic
-          }
+           Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const OtpScreen(),
+                              ),
+           );
+
+          
         },
         style: ElevatedButton.styleFrom(
           elevation: 0,
