@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'signup.dart';
+import 'forgot_pw.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -23,8 +24,7 @@ class _SignInScreenState extends State<SignInScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Column(
                 children: [
-                  SizedBox(height: constraints.maxHeight * 0.1),
-
+                  SizedBox(height: constraints.maxHeight * 0.2),
                   Align(
                     alignment: Alignment.centerLeft,
                     child: Text(
@@ -35,8 +35,7 @@ class _SignInScreenState extends State<SignInScreen> {
                       textAlign: TextAlign.left,
                     ),
                   ),
-
-                  SizedBox(height: constraints.maxHeight * 0.2),
+                  SizedBox(height: constraints.maxHeight * 0.1),
                   Form(
                     key: _formKey,
                     child: Column(
@@ -50,8 +49,7 @@ class _SignInScreenState extends State<SignInScreen> {
                                 horizontal: 16.0 * 1.5, vertical: 16.0),
                             border: OutlineInputBorder(
                               borderSide: BorderSide.none,
-                              borderRadius:
-                                  BorderRadius.all(Radius.circular(50)),
+                              borderRadius: BorderRadius.all(Radius.circular(50)),
                             ),
                           ),
                           keyboardType: TextInputType.emailAddress,
@@ -71,8 +69,7 @@ class _SignInScreenState extends State<SignInScreen> {
                                   horizontal: 16.0 * 1.5, vertical: 16.0),
                               border: OutlineInputBorder(
                                 borderSide: BorderSide.none,
-                                borderRadius:
-                                    BorderRadius.all(Radius.circular(50)),
+                                borderRadius: BorderRadius.all(Radius.circular(50)),
                               ),
                             ),
                             onSaved: (password) {
@@ -80,7 +77,6 @@ class _SignInScreenState extends State<SignInScreen> {
                             },
                           ),
                         ),
-
                         // Remember Me and Forgot Password Row
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -101,6 +97,12 @@ class _SignInScreenState extends State<SignInScreen> {
                             ),
                             TextButton(
                               onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const ForgotPasswordScreen(),
+                                  ),
+                                );
                                 // Forgot Password action
                               },
                               child: Text(
@@ -122,34 +124,32 @@ class _SignInScreenState extends State<SignInScreen> {
                         SizedBox(height: constraints.maxHeight * 0.05),
                         Center(
                           child: ElevatedButton(
-                          onPressed: () {
-                            if (_formKey.currentState!.validate()) {
-                            _formKey.currentState!.save();
-                            // Navigate to the main screen
-                            }
-                          },
-                          style: ElevatedButton.styleFrom(
-                            elevation: 0,
-                            backgroundColor: const Color(0xFF1471D3),
-                            foregroundColor: Colors.white,
-                            minimumSize: const Size(150, 40), // Adjust the width here
-                            shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            onPressed: () {
+                              if (_formKey.currentState!.validate()) {
+                                _formKey.currentState!.save();
+                                // Navigate to the main screen
+                              }
+                            },
+                            style: ElevatedButton.styleFrom(
+                              elevation: 0,
+                              backgroundColor: const Color(0xFF1471D3),
+                              foregroundColor: Colors.white,
+                              minimumSize: const Size(150, 40), // Adjust the width here
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
                             ),
-                          ),
-                          child: const Text(
-                            "Log In",
-                            style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
+                            child: const Text(
+                              "Log In",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
-                          ),
                           ),
                         ),
-
                         SizedBox(height: constraints.maxHeight * 0.2),
-
                         TextButton(
                           onPressed: () {
                             // Navigate to the SignUpScreen when Sign Up is pressed
