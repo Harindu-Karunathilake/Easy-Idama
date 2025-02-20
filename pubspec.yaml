@@ -36,6 +36,7 @@ dependencies:
   cupertino_icons: ^1.0.8
   flutter_svg: ^2.0.17
   flutter_launcher_icons: ^0.14.3
+  smooth_page_indicator: ^1.0.0
 
 dev_dependencies:
   flutter_test:
@@ -55,6 +56,9 @@ dev_dependencies:
 flutter:
   assets:
     - assets/landing_background.jpg
+    - assets/onboard1.jpg
+    - assets/onboard2.jpg
+    - assets/onboard3.jpg
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
