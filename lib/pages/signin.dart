@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'signup.dart';
 import 'forgot_pw.dart';
+import 'home.dart'; // Import the HomeScreen
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -127,7 +128,13 @@ class _SignInScreenState extends State<SignInScreen> {
                             onPressed: () {
                               if (_formKey.currentState!.validate()) {
                                 _formKey.currentState!.save();
-                                // Navigate to the main screen
+                                // Navigate to Home Screen
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const HomeScreen(),
+                                  ),
+                                );
                               }
                             },
                             style: ElevatedButton.styleFrom(
