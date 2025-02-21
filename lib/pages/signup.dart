@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'signin.dart';
 
@@ -13,6 +14,64 @@ class _SignUpScreenState extends State<SignUpScreen> {
   bool _obscurePassword = true;  // To toggle password visibility
   bool _obscureConfirmPassword = true; // To toggle confirm password visibility
 
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  // TextEditingController for email, password, and username fields
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _usernameController = TextEditingController();
+
+  // Method to handle sign-up
+  Future<void> _signUp() async {
+    try {
+      // Create user with email and password
+      final UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
+        email: _emailController.text,
+        password: _passwordController.text,
+      );
+
+      // Optionally, you can set the username in Firebase Authentication's displayName (but it's not mandatory)
+      await userCredential.user?.updateDisplayName(_usernameController.text);
+
+      // Navigate to the SignIn screen after successful sign-up
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const SignInScreen(),
+        ),
+      );
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'weak-password') {
+        _showErrorDialog('The password provided is too weak.');
+      } else if (e.code == 'email-already-in-use') {
+        _showErrorDialog('The account already exists for that email.');
+      } else {
+        _showErrorDialog('An error occurred. Please try again.');
+      }
+    }
+  }
+
+  // Method to show error dialog
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Error'),
+          content: Text(message),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -26,7 +85,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   SizedBox(height: constraints.maxHeight * 0.1),
-
                   Align(
                     alignment: Alignment.centerLeft,
                     child: Text(
@@ -37,7 +95,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       textAlign: TextAlign.left,
                     ),
                   ),
-
                   SizedBox(height: constraints.maxHeight * 0.1),
                   Form(
                     key: _formKey,
@@ -45,6 +102,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       children: [
                         // Email Field
                         TextFormField(
+                          controller: _emailController,
                           decoration: const InputDecoration(
                             hintText: 'Email',
                             filled: true,
@@ -57,15 +115,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                   BorderRadius.all(Radius.circular(50)),
                             ),
                           ),
-                          onSaved: (email) {
-                            // Save email
-                          },
                         ),
 
                         // Username Field
                         Padding(
                           padding: const EdgeInsets.symmetric(vertical: 16.0),
                           child: TextFormField(
+                            controller: _usernameController,
                             decoration: const InputDecoration(
                               hintText: 'Username',
                               filled: true,
@@ -78,9 +134,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                     BorderRadius.all(Radius.circular(50)),
                               ),
                             ),
-                            onSaved: (username) {
-                              // Save username
-                            },
                           ),
                         ),
 
@@ -88,6 +141,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         Padding(
                           padding: const EdgeInsets.symmetric(vertical: 16.0),
                           child: TextFormField(
+                            controller: _passwordController,
                             obscureText: _obscurePassword,
                             decoration: InputDecoration(
                               hintText: 'Password',
@@ -111,9 +165,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                 },
                               ),
                             ),
-                            onSaved: (password) {
-                              // Save password
-                            },
                           ),
                         ),
 
@@ -139,14 +190,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                     : Icons.visibility),
                                 onPressed: () {
                                   setState(() {
-                                    _obscureConfirmPassword = !_obscureConfirmPassword;
+                                    _obscureConfirmPassword =
+                                        !_obscureConfirmPassword;
                                   });
                                 },
                               ),
                             ),
-                            onSaved: (confirmPassword) {
-                              // Save confirm password
-                            },
                           ),
                         ),
 
@@ -157,7 +206,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             onPressed: () {
                               if (_formKey.currentState!.validate()) {
                                 _formKey.currentState!.save();
-                                // Handle Sign Up action here
+                                _signUp(); // Handle sign-up action
                               }
                             },
                             style: ElevatedButton.styleFrom(

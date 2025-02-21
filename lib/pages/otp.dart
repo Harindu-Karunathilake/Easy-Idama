@@ -10,6 +10,8 @@ class OtpScreen extends StatelessWidget {
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
+        elevation: 0, // Remove any shadow for a clean look
+        automaticallyImplyLeading: false, // Remove back button
       ),
       body: SafeArea(
         child: SizedBox(
@@ -70,122 +72,38 @@ class OtpForm extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              SizedBox(
-                height: 64,
-                width: 64,
-                child: TextFormField(
-                  onSaved: (pin) {},
-                  onChanged: (pin) {
-                    if (pin.isNotEmpty) {
-                      FocusScope.of(context).nextFocus();
-                    }
-                  },
-                  textInputAction: TextInputAction.next,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [
-                    LengthLimitingTextInputFormatter(1),
-                    FilteringTextInputFormatter.digitsOnly,
-                  ],
-                  style: Theme.of(context).textTheme.titleLarge,
-                  textAlign: TextAlign.center,
-                  decoration: InputDecoration(
-                    hintText: "0",
-                    hintStyle: const TextStyle(color: Color(0xFF757575)),
-                    border: authOutlineInputBorder,
-                    enabledBorder: authOutlineInputBorder,
-                    focusedBorder: authOutlineInputBorder.copyWith(
-                      borderSide: const BorderSide(color: Color(0xFF1471D3)),
+              // OTP input fields for 4 digits
+              ...List.generate(4, (index) {
+                return SizedBox(
+                  height: 64,
+                  width: 64,
+                  child: TextFormField(
+                    onSaved: (pin) {},
+                    onChanged: (pin) {
+                      if (pin.isNotEmpty && index < 3) {
+                        FocusScope.of(context).nextFocus();
+                      }
+                    },
+                    textInputAction: TextInputAction.next,
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [
+                      LengthLimitingTextInputFormatter(1),
+                      FilteringTextInputFormatter.digitsOnly,
+                    ],
+                    style: Theme.of(context).textTheme.titleLarge,
+                    textAlign: TextAlign.center,
+                    decoration: InputDecoration(
+                      hintText: "0",
+                      hintStyle: const TextStyle(color: Color(0xFF757575)),
+                      border: authOutlineInputBorder,
+                      enabledBorder: authOutlineInputBorder,
+                      focusedBorder: authOutlineInputBorder.copyWith(
+                        borderSide: const BorderSide(color: Color(0xFF1471D3)),
+                      ),
                     ),
                   ),
-                ),
-              ),
-              SizedBox(
-                height: 64,
-                width: 64,
-                child: TextFormField(
-                  onSaved: (pin) {},
-                  onChanged: (pin) {
-                    if (pin.isNotEmpty) {
-                      FocusScope.of(context).nextFocus();
-                    }
-                  },
-                  textInputAction: TextInputAction.next,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [
-                    LengthLimitingTextInputFormatter(1),
-                    FilteringTextInputFormatter.digitsOnly,
-                  ],
-                  style: Theme.of(context).textTheme.titleLarge,
-                  textAlign: TextAlign.center,
-                  decoration: InputDecoration(
-                    hintText: "0",
-                    hintStyle: const TextStyle(color: Color(0xFF757575)),
-                    border: authOutlineInputBorder,
-                    enabledBorder: authOutlineInputBorder,
-                    focusedBorder: authOutlineInputBorder.copyWith(
-                      borderSide: const BorderSide(color: Color(0xFF1471D3)),
-                    ),
-                  ),
-                ),
-              ),
-              SizedBox(
-                height: 64,
-                width: 64,
-                child: TextFormField(
-                  onSaved: (pin) {},
-                  onChanged: (pin) {
-                    if (pin.isNotEmpty) {
-                      FocusScope.of(context).nextFocus();
-                    }
-                  },
-                  textInputAction: TextInputAction.next,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [
-                    LengthLimitingTextInputFormatter(1),
-                    FilteringTextInputFormatter.digitsOnly,
-                  ],
-                  style: Theme.of(context).textTheme.titleLarge,
-                  textAlign: TextAlign.center,
-                  decoration: InputDecoration(
-                    hintText: "0",
-                    hintStyle: const TextStyle(color: Color(0xFF757575)),
-                    border: authOutlineInputBorder,
-                    enabledBorder: authOutlineInputBorder,
-                    focusedBorder: authOutlineInputBorder.copyWith(
-                      borderSide: const BorderSide(color: Color(0xFF1471D3)),
-                    ),
-                  ),
-                ),
-              ),
-              SizedBox(
-                height: 64,
-                width: 64,
-                child: TextFormField(
-                  onSaved: (pin) {},
-                  onChanged: (pin) {
-                    if (pin.isNotEmpty) {
-                      FocusScope.of(context).nextFocus();
-                    }
-                  },
-                  textInputAction: TextInputAction.next,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [
-                    LengthLimitingTextInputFormatter(1),
-                    FilteringTextInputFormatter.digitsOnly,
-                  ],
-                  style: Theme.of(context).textTheme.titleLarge,
-                  textAlign: TextAlign.center,
-                  decoration: InputDecoration(
-                    hintText: "0",
-                    hintStyle: const TextStyle(color: Color(0xFF757575)),
-                    border: authOutlineInputBorder,
-                    enabledBorder: authOutlineInputBorder,
-                    focusedBorder: authOutlineInputBorder.copyWith(
-                      borderSide: const BorderSide(color: Color(0xFF1471D3)),
-                    ),
-                  ),
-                ),
-              ),
+                );
+              }),
             ],
           ),
           const SizedBox(height: 24),

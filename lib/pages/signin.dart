@@ -1,3 +1,5 @@
+import 'package:firebase_auth/firebase_auth.dart';
+
 import 'package:flutter/material.dart';
 import 'signup.dart';
 import 'forgot_pw.dart';
@@ -13,6 +15,58 @@ class SignInScreen extends StatefulWidget {
 class _SignInScreenState extends State<SignInScreen> {
   final _formKey = GlobalKey<FormState>();
   bool _rememberMe = false; // State for "Remember Me" checkbox
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+
+  // Firebase Authentication instance
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  // Sign in method
+  Future<void> _signIn() async {
+    try {
+      final UserCredential userCredential = await _auth.signInWithEmailAndPassword(
+        email: _emailController.text,
+        password: _passwordController.text,
+      );
+
+      // Navigate to Home Screen if sign-in is successful
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const HomeScreen(),
+        ),
+      );
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'user-not-found') {
+        _showErrorDialog('No user found for that email.');
+      } else if (e.code == 'wrong-password') {
+        _showErrorDialog('Wrong password provided.');
+      } else {
+        _showErrorDialog('An error occurred. Please try again.');
+      }
+    }
+  }
+
+  // Method to show error dialog
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Error'),
+          content: Text(message),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -42,6 +96,7 @@ class _SignInScreenState extends State<SignInScreen> {
                     child: Column(
                       children: [
                         TextFormField(
+                          controller: _emailController,
                           decoration: const InputDecoration(
                             hintText: 'Email',
                             filled: true,
@@ -54,13 +109,11 @@ class _SignInScreenState extends State<SignInScreen> {
                             ),
                           ),
                           keyboardType: TextInputType.emailAddress,
-                          onSaved: (email) {
-                            // Save it
-                          },
                         ),
                         Padding(
                           padding: const EdgeInsets.symmetric(vertical: 16.0),
                           child: TextFormField(
+                            controller: _passwordController,
                             obscureText: true,
                             decoration: const InputDecoration(
                               hintText: 'Password',
@@ -73,9 +126,6 @@ class _SignInScreenState extends State<SignInScreen> {
                                 borderRadius: BorderRadius.all(Radius.circular(50)),
                               ),
                             ),
-                            onSaved: (password) {
-                              // Save it
-                            },
                           ),
                         ),
                         // Remember Me and Forgot Password Row
@@ -127,14 +177,7 @@ class _SignInScreenState extends State<SignInScreen> {
                           child: ElevatedButton(
                             onPressed: () {
                               if (_formKey.currentState!.validate()) {
-                                _formKey.currentState!.save();
-                                // Navigate to Home Screen
-                                Navigator.pushReplacement(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => const HomeScreen(),
-                                  ),
-                                );
+                                _signIn();
                               }
                             },
                             style: ElevatedButton.styleFrom(
