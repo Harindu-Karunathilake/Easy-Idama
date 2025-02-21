@@ -2,7 +2,7 @@ name: mad
 description: "A new Flutter project."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
-publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+publish_to: "none" # Remove this line if you wish to publish to pub.dev
 
 # The following defines the version and build number for your application.
 # A version number is three numbers separated by dots, like 1.2.43
@@ -37,6 +37,7 @@ dependencies:
   flutter_svg: ^2.0.17
   flutter_launcher_icons: ^0.14.3
   smooth_page_indicator: ^1.0.0
+  google_nav_bar: ^5.0.7
 
 dev_dependencies:
   flutter_test:
@@ -89,13 +90,13 @@ flutter:
         - asset: fonts/Poppins-Medium.ttf
           weight: 500
         - asset: fonts/Poppins-Regular.ttf
-          weight: 400 
+          weight: 400
         - asset: fonts/Poppins-SemiBold.ttf
           weight: 600
 
 flutter_icons:
   android: true
   ios: true
-  image_path: "assets/icons/app_icon.png"  # Replace with your icon path
-  adaptive_icon_background: "#ffffff"  # Background color for Android adaptive icons
+  image_path: "assets/icons/app_icon.png" # Replace with your icon path
+  adaptive_icon_background: "#ffffff" # Background color for Android adaptive icons
   #adaptive_icon_foreground: "assets/icon/app_icon_foreground.png" # Foreground image for Android adaptive icons (optional)
