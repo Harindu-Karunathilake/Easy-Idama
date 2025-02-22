@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'signin.dart';
 import 'otp.dart';
@@ -12,6 +13,31 @@ class ForgotPasswordScreen extends StatefulWidget {
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
+
+  // Firebase Auth instance
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  Future<void> _resetPassword() async {
+    if (_formKey.currentState?.validate() ?? false) {
+      try {
+        await _auth.sendPasswordResetEmail(email: _emailController.text);
+        // Show success message and navigate to OTP screen or confirmation screen
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Password reset email sent')),
+        );
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const OtpScreen(),
+          ),
+        );
+      } on FirebaseAuthException catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.message ?? 'An error occurred')),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -89,16 +115,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   Widget _buildContinueButton() {
     return Center(
       child: ElevatedButton(
-        onPressed: () {
-           Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const OtpScreen(),
-                              ),
-           );
-
-          
-        },
+        onPressed: _resetPassword,
         style: ElevatedButton.styleFrom(
           elevation: 0,
           backgroundColor: const Color(0xFF1471D3),
