@@ -23,11 +23,12 @@ class IntroPage3 extends StatelessWidget {
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 24.0),
             child: Text(
-              'Chat with sellers directly from the app',
+              'Chat with \n sellers directly \n from the app',
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: 16,
+                fontSize: 20,
                 fontWeight: FontWeight.w500,
+                fontStyle: FontStyle.italic,
                 color: Colors.black87, // Slightly softer black
               ),
             ),

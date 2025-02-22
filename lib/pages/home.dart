@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
+import 'package:mad/pages/header_parts.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -9,6 +10,8 @@ class HomeScreen extends StatelessWidget {
     return Scaffold(
       bottomNavigationBar: GNav(
         tabBackgroundColor: const Color(0xFF1471D3),
+        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
+        tabBorderRadius: 10,
         gap: 8,
         tabs: [
           GButton(icon: Icons.home,
@@ -22,13 +25,13 @@ class HomeScreen extends StatelessWidget {
 
         ]
         ),
-      appBar: AppBar(title: const Text('Home')),
-      body: const Center(
-        child: Text(
-          'Welcome to the Home Page!',
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-        ),
-      ),
+        
+      body: ListView(
+        children: [
+          //for header parts
+          HeaderParts()
+        ],
+      )
     );
   }
 }
