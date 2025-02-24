@@ -8,30 +8,27 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white, // Set default background color to white
       bottomNavigationBar: GNav(
         tabBackgroundColor: const Color(0xFF1471D3),
         padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
         tabBorderRadius: 10,
         gap: 8,
-        tabs: [
-          GButton(icon: Icons.home,
-          text: 'Home',),
-          GButton(icon: Icons.search,
-          text: 'Search',),
-          GButton(icon: Icons.favorite_border,
-          text: 'Favorite',),
-          GButton(icon: Icons.account_circle,
-          text: 'Profile',),
-
-        ]
-        ),
-        
-      body: ListView(
-        children: [
-          //for header parts
-          HeaderParts()
+        tabs: const [
+          GButton(icon: Icons.home, text: 'Home'),
+          GButton(icon: Icons.search, text: 'Search'),
+          GButton(icon: Icons.favorite_border, text: 'Favorite'),
+          GButton(icon: Icons.account_circle, text: 'Profile'),
         ],
-      )
+      ),
+      body: Container(
+        color: Colors.white, // Ensures ListView has a white background
+        child: ListView(
+          children: const [
+            HeaderParts(), // Header section
+          ],
+        ),
+      ),
     );
   }
 }
