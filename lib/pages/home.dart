@@ -8,20 +8,26 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-
-      backgroundColor: Colors.white, // Set default background color to white
-      bottomNavigationBar: GNav(
-        tabBackgroundColor: const Color(0xFF1471D3),
-        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
-        tabBorderRadius: 10,
-        gap: 8,
-        tabs: const [
-          GButton(icon: Icons.home, text: 'Home'),
-          GButton(icon: Icons.search, text: 'Search'),
-          GButton(icon: Icons.favorite_border, text: 'Favorite'),
-          GButton(icon: Icons.account_circle, text: 'Profile'),
-        ],
-      ),
+       bottomNavigationBar: Container(
+  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5), // Adjust padding for different screens
+  child: GNav(
+    backgroundColor: Colors.white, // Set a background color if needed
+    color: Colors.grey[800], // Default icon color
+    activeColor: Colors.white, // Active icon/text color
+    tabBackgroundColor: const Color(0xFF1471D3), // Background color when selected
+    gap: 8, // Space between icon and text
+    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12), // Makes the navbar responsive
+    tabBorderRadius: 20, // Rounded edges for tabs
+    curve: Curves.easeInOut, // Smooth animation effect
+    haptic: true, // Provides haptic feedback on click
+    tabs: const [
+      GButton(icon: Icons.home, text: 'Home'),
+      GButton(icon: Icons.search, text: 'Search'),
+      GButton(icon: Icons.favorite_border, text: 'Favorite'),
+      GButton(icon: Icons.account_circle, text: 'Profile'),
+    ],
+  ),
+),
       body: Container(
         color: Colors.white, // Ensures ListView has a white background
         child: ListView(
