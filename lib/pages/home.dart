@@ -8,6 +8,7 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+
       backgroundColor: Colors.white, // Set default background color to white
       bottomNavigationBar: GNav(
         tabBackgroundColor: const Color(0xFF1471D3),
@@ -27,6 +28,7 @@ class HomeScreen extends StatelessWidget {
           children: const [
             HeaderParts(), // Header section
           ],
+
         ),
       ),
     );
