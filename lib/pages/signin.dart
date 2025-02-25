@@ -1,5 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
-
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter/material.dart';
 import 'signup.dart';
 import 'forgot_pw.dart';
@@ -15,11 +15,19 @@ class SignInScreen extends StatefulWidget {
 class _SignInScreenState extends State<SignInScreen> {
   final _formKey = GlobalKey<FormState>();
   bool _rememberMe = false; // State for "Remember Me" checkbox
+  bool _obscurePassword = true;
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
   // Firebase Authentication instance
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FlutterSecureStorage storage = const FlutterSecureStorage();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSavedCredentials(); // Load saved credentials when screen opens
+  }
 
   // Sign in method
   Future<void> _signIn() async {
@@ -28,6 +36,8 @@ class _SignInScreenState extends State<SignInScreen> {
         email: _emailController.text,
         password: _passwordController.text,
       );
+
+      _saveCredentials(); // Save credentials if "Remember Me" is checked
 
       // Navigate to Home Screen if sign-in is successful
       Navigator.pushReplacement(
@@ -44,6 +54,31 @@ class _SignInScreenState extends State<SignInScreen> {
       } else {
         _showErrorDialog('An error occurred. Please try again.');
       }
+    }
+  }
+
+  // Load saved credentials
+  void _loadSavedCredentials() async {
+    String? savedEmail = await storage.read(key: "email");
+    String? savedPassword = await storage.read(key: "password");
+
+    if (savedEmail != null && savedPassword != null) {
+      setState(() {
+        _emailController.text = savedEmail;
+        _passwordController.text = savedPassword;
+        _rememberMe = true;
+      });
+    }
+  }
+
+  // Save credentials if "Remember Me" is checked
+  void _saveCredentials() async {
+    if (_rememberMe) {
+      await storage.write(key: "email", value: _emailController.text);
+      await storage.write(key: "password", value: _passwordController.text);
+    } else {
+      await storage.delete(key: "email");
+      await storage.delete(key: "password");
     }
   }
 
@@ -97,13 +132,13 @@ class _SignInScreenState extends State<SignInScreen> {
                       children: [
                         TextFormField(
                           controller: _emailController,
-                          decoration: const InputDecoration(
+                          decoration: InputDecoration(
                             hintText: 'Email',
                             filled: true,
-                            fillColor: Color(0xFFF5FCF9),
-                            contentPadding: EdgeInsets.symmetric(
-                                horizontal: 16.0 * 1.5, vertical: 16.0),
-                            border: OutlineInputBorder(
+                            fillColor: const Color(0xFFF5FCF9),
+                            contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 24.0, vertical: 16.0),
+                            border: const OutlineInputBorder(
                               borderSide: BorderSide.none,
                               borderRadius: BorderRadius.all(Radius.circular(50)),
                             ),
@@ -114,16 +149,26 @@ class _SignInScreenState extends State<SignInScreen> {
                           padding: const EdgeInsets.symmetric(vertical: 16.0),
                           child: TextFormField(
                             controller: _passwordController,
-                            obscureText: true,
-                            decoration: const InputDecoration(
+                            obscureText: _obscurePassword,
+                            decoration: InputDecoration(
                               hintText: 'Password',
                               filled: true,
-                              fillColor: Color(0xFFF5FCF9),
-                              contentPadding: EdgeInsets.symmetric(
-                                  horizontal: 16.0 * 1.5, vertical: 16.0),
-                              border: OutlineInputBorder(
+                              fillColor: const Color(0xFFF5FCF9),
+                              contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 24.0, vertical: 16.0),
+                              border: const OutlineInputBorder(
                                 borderSide: BorderSide.none,
                                 borderRadius: BorderRadius.all(Radius.circular(50)),
+                              ),
+                              suffixIcon: IconButton(
+                                icon: Icon(_obscurePassword
+                                    ? Icons.visibility_off
+                                    : Icons.visibility),
+                                onPressed: () {
+                                  setState(() {
+                                    _obscurePassword = !_obscurePassword;
+                                  });
+                                },
                               ),
                             ),
                           ),
@@ -154,7 +199,6 @@ class _SignInScreenState extends State<SignInScreen> {
                                     builder: (context) => const ForgotPasswordScreen(),
                                   ),
                                 );
-                                // Forgot Password action
                               },
                               child: Text(
                                 'Forgot Password?',
@@ -184,7 +228,7 @@ class _SignInScreenState extends State<SignInScreen> {
                               elevation: 0,
                               backgroundColor: const Color(0xFF1471D3),
                               foregroundColor: Colors.white,
-                              minimumSize: const Size(150, 40), // Adjust the width here
+                              minimumSize: const Size(150, 40),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(8),
                               ),
