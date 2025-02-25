@@ -220,58 +220,75 @@ class _HeaderPartsState extends State<HeaderParts> {
       ),
     );
   }
-
-  Widget _buildPopularCard() {
-    return Container(
-      width: 250,
-      margin: const EdgeInsets.only(right: 10),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(10),
-        boxShadow: [
-          BoxShadow(color: Colors.grey.shade300, blurRadius: 5, spreadRadius: 2),
-        ],
-      ),
-      child: Card(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
-              child: Image.asset(
-                'assets/land.jpg',
-                height: 150,
-                width: double.infinity,
-                fit: BoxFit.cover,
-              ),
+  
+Widget _buildPopularCard() {
+  return Container(
+    width: 250,
+    margin: const EdgeInsets.only(right: 10),
+    decoration: BoxDecoration(
+      borderRadius: BorderRadius.circular(10),
+      boxShadow: [
+        BoxShadow(color: Colors.grey.shade300, blurRadius: 5, spreadRadius: 2),
+      ],
+    ),
+    child: Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ClipRRect(
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
+            child: Image.asset(
+              'assets/land.jpg',
+              height: 150,
+              width: double.infinity,
+              fit: BoxFit.cover,
             ),
-            Padding(
-              padding: const EdgeInsets.all(10.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
+          ),
+          Padding(
+            padding: const EdgeInsets.all(10.0),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start, // Align to the top
+              children: [
+                // Ensures text does not overflow
+                Expanded(
+                  child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
                     children: const [
-                      Text("Beautiful Land in Kandy", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                      Text(
+                        "Beautiful Land in Kandy",
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        overflow: TextOverflow.ellipsis, // Prevents overflow
+                        maxLines: 1, // Ensures it doesn't expand too much
+                      ),
                       SizedBox(height: 5),
-                      Text("Kandy, Sri Lanka", style: TextStyle(fontSize: 14, color: Colors.grey)),
+                      Text(
+                        "Kandy, Sri Lanka",
+                        style: TextStyle(fontSize: 14, color: Colors.grey),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                      ),
                     ],
                   ),
-                  IconButton(
-                    icon: Icon(isFavorite ? Icons.favorite : Icons.favorite_border, color: isFavorite ? Colors.red : Colors.grey),
-                    onPressed: () {
-                      setState(() {
-                        isFavorite = !isFavorite;
-                      });
-                    },
-                  ),
-                ],
-              ),
+                ),
+                // Favorite Icon
+                IconButton(
+                  icon: Icon(isFavorite ? Icons.favorite : Icons.favorite_border, 
+                    color: isFavorite ? Colors.red : Colors.grey),
+                  onPressed: () {
+                    setState(() {
+                      isFavorite = !isFavorite;
+                    });
+                  },
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
-    );
-  }
+    ),
+  );
+}
+
 }

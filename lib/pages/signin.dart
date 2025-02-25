@@ -14,7 +14,8 @@ class SignInScreen extends StatefulWidget {
 
 class _SignInScreenState extends State<SignInScreen> {
   final _formKey = GlobalKey<FormState>();
-  bool _rememberMe = false; // State for "Remember Me" checkbox
+  bool _rememberMe = false;
+  bool _obscurePassword = true; // State for "Remember Me" checkbox
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
@@ -97,7 +98,7 @@ class _SignInScreenState extends State<SignInScreen> {
                       children: [
                         TextFormField(
                           controller: _emailController,
-                          decoration: const InputDecoration(
+                          decoration: InputDecoration(
                             hintText: 'Email',
                             filled: true,
                             fillColor: Color(0xFFF5FCF9),
@@ -114,8 +115,8 @@ class _SignInScreenState extends State<SignInScreen> {
                           padding: const EdgeInsets.symmetric(vertical: 16.0),
                           child: TextFormField(
                             controller: _passwordController,
-                            obscureText: true,
-                            decoration: const InputDecoration(
+                            obscureText: _obscurePassword,
+                            decoration: InputDecoration(
                               hintText: 'Password',
                               filled: true,
                               fillColor: Color(0xFFF5FCF9),
@@ -124,6 +125,17 @@ class _SignInScreenState extends State<SignInScreen> {
                               border: OutlineInputBorder(
                                 borderSide: BorderSide.none,
                                 borderRadius: BorderRadius.all(Radius.circular(50)),
+                              ),
+                               suffixIcon: IconButton(
+                                icon: Icon(_obscurePassword
+                                    ? Icons.visibility_off
+                                    : Icons.visibility),
+                                onPressed: () {
+                                  setState(() {
+                                    _obscurePassword =
+                                        !_obscurePassword;
+                                  });
+                                },
                               ),
                             ),
                           ),
