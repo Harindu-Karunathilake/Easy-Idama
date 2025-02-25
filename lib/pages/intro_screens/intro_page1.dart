@@ -23,12 +23,11 @@ class IntroPage1 extends StatelessWidget {
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 24.0),
             child: Text(
-              'Find your ideal land \n using location & price \n filters.',
+              'Find your ideal land using location & price filters.',
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: 20,
+                fontSize: 16,
                 fontWeight: FontWeight.w500,
-                fontStyle: FontStyle.italic,
                 color: Colors.black87, // Slightly softer black
               ),
             ),
