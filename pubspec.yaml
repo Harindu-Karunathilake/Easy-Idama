@@ -61,8 +61,6 @@ flutter:
     - assets/onboard1.jpg
     - assets/onboard2.jpg
     - assets/onboard3.jpg
-    - assets/profile.jpg
-    - assets/land.jpg
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
