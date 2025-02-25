@@ -23,11 +23,12 @@ class IntroPage2 extends StatelessWidget {
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 24.0),
             child: Text(
-              'Buy & sell land easily with secure verification.',
+              'Buy & sell land easily \n with secure \n verification.',
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: 16,
+                fontSize: 20,
                 fontWeight: FontWeight.w500,
+                fontStyle: FontStyle.italic,
                 color: Colors.black87, // Slightly softer black
               ),
             ),
