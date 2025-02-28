@@ -144,12 +144,13 @@ class _HeaderPartsState extends State<HeaderParts> {
           filled: true,
           fillColor: Colors.white,
           contentPadding: const EdgeInsets.symmetric(vertical: 12.0),
-          border: OutlineInputBorder(
+            border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(30),
-            borderSide: BorderSide.none,
+            borderSide: BorderSide(color: Colors.blueAccent),
+            ),
           ),
         ),
-      ),
+      
     );
   }
 
@@ -219,7 +220,11 @@ class _HeaderPartsState extends State<HeaderParts> {
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
-              children: filteredItems.map((property) => _buildPopularCard(property)).toList(),
+              children: filteredItems.map((property) => _buildPopularCard(property, isFavorite, () {
+                setState(() {
+                  isFavorite = !isFavorite;
+                });
+              })).toList(),
             ),
           ),
         ],
@@ -227,52 +232,68 @@ class _HeaderPartsState extends State<HeaderParts> {
     );
   }
 
-  Widget _buildPopularCard(Map<String, String> property) {
+Widget _buildPopularCard(Map<String, String> property, bool isFavorite, Function toggleFavorite) {
   return Container(
     width: 250,
     margin: const EdgeInsets.only(right: 10),
+    decoration: BoxDecoration(
+      borderRadius: BorderRadius.circular(10),
+      boxShadow: [
+        BoxShadow(color: Colors.grey.shade100, blurRadius: 5, spreadRadius: 2),
+      ],
+    ),
     child: Card(
-      clipBehavior: Clip.antiAlias, // Ensures the image does not overflow
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12), // Rounded corners
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          SizedBox(
-            height: 130, // Fixed height for the image
-            width: double.infinity, // Ensures the image stretches across the card width
+          ClipRRect(
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
             child: Image.asset(
               property["image"]!,
-              fit: BoxFit.cover, // Ensures the image covers the entire space
+              height: 130,
+              width: double.infinity,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => Container(
+                height: 130,
+                width: double.infinity,
+                color: Colors.grey[300],
+                child: const Center(child: Icon(Icons.image, size: 40, color: Colors.grey)),
+              ),
             ),
           ),
           Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            padding: const EdgeInsets.all(10.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  property["name"]!,
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                Flexible(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        property["name"]!,
+                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 5),
+                      Text(
+                        property["location"]!,
+                        style: const TextStyle(fontSize: 12, color: Colors.grey),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
                 ),
-                const SizedBox(height: 4),
-                Text(property["location"]!),
+                IconButton(
+                  icon: Icon(
+                    isFavorite ? Icons.favorite : Icons.favorite_border,
+                    color: isFavorite ? Colors.red : Colors.grey,
+                  ),
+                  onPressed: () => toggleFavorite(),
+                ),
               ],
-            ),
-          ),
-          Align(
-            alignment: Alignment.centerRight,
-            child: IconButton(
-              icon: Icon(
-                isFavorite ? Icons.favorite : Icons.favorite_border,
-                color: isFavorite ? Colors.red : Colors.grey,
-              ),
-              onPressed: () {
-                setState(() {
-                  isFavorite = !isFavorite;
-                });
-              },
             ),
           ),
         ],
@@ -280,6 +301,7 @@ class _HeaderPartsState extends State<HeaderParts> {
     ),
   );
 }
+
 
   }
 
