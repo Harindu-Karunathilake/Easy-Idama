@@ -8,8 +8,42 @@ class HeaderParts extends StatefulWidget {
 }
 
 class _HeaderPartsState extends State<HeaderParts> {
+  TextEditingController _searchController = TextEditingController();
   String selectedCategory = "Home";
   bool isFavorite = false;
+
+  List<Map<String, String>> items = [
+    {"name": "Beautiful Land in Kandy", "location": "Kandy, Sri Lanka", "image": 'assets/land.jpg',"catoegary":"Land"},
+    {"name": "Apartment in Colombo", "location": "Colombo, Sri Lanka", "image": 'assets/land.jpg',"catoegary":"Apartment"},
+    {"name": "Cozy Home in Galle", "location": "Galle, Sri Lanka", "image": 'assets/land.jpg',"catoegary":"Home"},
+    {"name": "Spacious Land in Jaffna", "location": "Jaffna, Sri Lanka", "image": 'assets/land.jpg',"catoegary":"Land"},
+   
+  ];
+  List<Map<String, String>> filteredItems = [];
+
+  @override
+  void initState() {
+    super.initState();
+    filteredItems = items; // Initially show all items
+  }
+
+  void _filterItems(String query) {
+    setState(() {
+      filteredItems = items.where((item) {
+        return item["name"]!.toLowerCase().contains(query.toLowerCase());
+      }).toList();
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+   void _selectCategory(String category) {
+    _searchController.text = category; // Set category as search text
+    _filterItems(category); // Filter based on category
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -67,10 +101,9 @@ class _HeaderPartsState extends State<HeaderParts> {
                 onPressed: () {},
               ),
               const SizedBox(width: 8),
-              CircleAvatar(
+              const CircleAvatar(
                 radius: 18,
-                backgroundImage: const AssetImage('assets/profile.jpg'),
-                onBackgroundImageError: (_, __) => const Icon(Icons.person, size: 18),
+                backgroundImage: AssetImage('assets/profile.jpg'),
               ),
             ],
           ),
@@ -103,8 +136,10 @@ class _HeaderPartsState extends State<HeaderParts> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
       child: TextField(
+        controller: _searchController,
+        onChanged: _filterItems, // Call search function
         decoration: InputDecoration(
-          hintText: "Search...",
+          hintText: "Search properties...",
           prefixIcon: const Icon(Icons.search, color: Colors.grey),
           filled: true,
           fillColor: Colors.white,
@@ -112,14 +147,6 @@ class _HeaderPartsState extends State<HeaderParts> {
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(30),
             borderSide: BorderSide.none,
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(30),
-            borderSide: BorderSide(color: Colors.grey.shade300, width: 1),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(30),
-            borderSide: const BorderSide(color: Colors.blue, width: 1.5),
           ),
         ),
       ),
@@ -146,6 +173,7 @@ class _HeaderPartsState extends State<HeaderParts> {
         setState(() {
           selectedCategory = category;
         });
+        _selectCategory(category);
       },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
@@ -191,7 +219,7 @@ class _HeaderPartsState extends State<HeaderParts> {
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
-              children: List.generate(4, (_) => _buildPopularCard()),
+              children: filteredItems.map((property) => _buildPopularCard(property)).toList(),
             ),
           ),
         ],
@@ -199,77 +227,59 @@ class _HeaderPartsState extends State<HeaderParts> {
     );
   }
 
-  Widget _buildPopularCard() {
-    return Container(
-      width: 250,
-      margin: const EdgeInsets.only(right: 10),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(10),
-        boxShadow: [
-          BoxShadow(color: Colors.grey.shade300, blurRadius: 5, spreadRadius: 2),
+  Widget _buildPopularCard(Map<String, String> property) {
+  return Container(
+    width: 250,
+    margin: const EdgeInsets.only(right: 10),
+    child: Card(
+      clipBehavior: Clip.antiAlias, // Ensures the image does not overflow
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12), // Rounded corners
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            height: 130, // Fixed height for the image
+            width: double.infinity, // Ensures the image stretches across the card width
+            child: Image.asset(
+              property["image"]!,
+              fit: BoxFit.cover, // Ensures the image covers the entire space
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  property["name"]!,
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 4),
+                Text(property["location"]!),
+              ],
+            ),
+          ),
+          Align(
+            alignment: Alignment.centerRight,
+            child: IconButton(
+              icon: Icon(
+                isFavorite ? Icons.favorite : Icons.favorite_border,
+                color: isFavorite ? Colors.red : Colors.grey,
+              ),
+              onPressed: () {
+                setState(() {
+                  isFavorite = !isFavorite;
+                });
+              },
+            ),
+          ),
         ],
       ),
-      child: Card(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min, // Prevents unnecessary space
-          children: [
-            ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
-              child: Image.asset(
-                'assets/land.jpg',
-                height: 130, // Reduced height to prevent overflow
-                width: double.infinity,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => Container(
-                  height: 130,
-                  width: double.infinity,
-                  color: Colors.grey[300],
-                  child: const Center(child: Icon(Icons.image, size: 40, color: Colors.grey)),
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(10.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Flexible(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [
-                        Text(
-                          "Beautiful Land in Kandy",
-                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        SizedBox(height: 5),
-                        Text(
-                          "Kandy, Sri Lanka",
-                          style: TextStyle(fontSize: 12, color: Colors.grey),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  ),
-                  IconButton(
-                    icon: Icon(
-                      isFavorite ? Icons.favorite : Icons.favorite_border,
-                      color: isFavorite ? Colors.red : Colors.grey,
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        isFavorite = !isFavorite;
-                      });
-                    },
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+    ),
+  );
 }
+
+  }
+
