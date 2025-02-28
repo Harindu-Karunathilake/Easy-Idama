@@ -146,7 +146,7 @@ class _HeaderPartsState extends State<HeaderParts> {
           contentPadding: const EdgeInsets.symmetric(vertical: 12.0),
             border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(30),
-            borderSide: BorderSide(color: Colors.blueAccent),
+            borderSide: BorderSide(color: Colors.black),
             ),
           ),
         ),
