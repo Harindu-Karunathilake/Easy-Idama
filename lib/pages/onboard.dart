@@ -13,10 +13,7 @@ class OnboardingScreen extends StatefulWidget {
 }
 
 class _OnBoardingScreenState extends State<OnboardingScreen> {
-  // Controller to track which page we are on
   final PageController _controller = PageController();
-
-  // Keep track if we are on the last page
   bool onLastPage = false;
 
   @override
@@ -29,10 +26,10 @@ class _OnBoardingScreenState extends State<OnboardingScreen> {
             controller: _controller,
             onPageChanged: (index) {
               setState(() {
-                onLastPage = (index == 2); // Check if on last page
+                onLastPage = (index == 2);
               });
             },
-            children: [
+            children:  [
               IntroPage1(),
               IntroPage2(),
               IntroPage3(),
@@ -92,7 +89,7 @@ class _OnBoardingScreenState extends State<OnboardingScreen> {
                     }
                   },
                   child: Text(
-                    onLastPage ? 'Done' : 'Next', // ✅ Change text dynamically
+                    onLastPage ? 'Done' : 'Next',
                     style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                 ),
@@ -103,11 +100,4 @@ class _OnBoardingScreenState extends State<OnboardingScreen> {
       ),
     );
   }
-}
-
-void main() {
-  runApp(const MaterialApp(
-    debugShowCheckedModeBanner: false,
-    home: OnboardingScreen(),
-  ));
 }
