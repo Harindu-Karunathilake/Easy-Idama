@@ -7,7 +7,7 @@ import 'package:mad/pages/profile.dart';
 
 class CustomNavBar extends StatelessWidget {
   final int selectedIndex;
-  final void Function(int) onTabChange; // Store the callback function
+  final void Function(int) onTabChange;
 
   const CustomNavBar({
     super.key,
@@ -23,7 +23,21 @@ class CustomNavBar extends StatelessWidget {
         if (currentRoute != '/home') {
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (context) => const HomePage()),
+            PageRouteBuilder(
+              pageBuilder: (context, animation, secondaryAnimation) => const HomePage(),
+              transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                const begin = Offset(0.5, 0.0);
+                const end = Offset.zero;
+                const curve = Curves.ease;
+
+                var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+
+                return SlideTransition(
+                  position: animation.drive(tween),
+                  child: child,
+                );
+              },
+            ),
           );
         }
         break;
@@ -31,7 +45,21 @@ class CustomNavBar extends StatelessWidget {
         if (currentRoute != '/search') {
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (context) => const SearchPage()),
+            PageRouteBuilder(
+              pageBuilder: (context, animation, secondaryAnimation) => const SearchPage(),
+              transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                const begin = Offset(0.5, 0.0);
+                const end = Offset.zero;
+                const curve = Curves.ease;
+
+                var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+
+                return SlideTransition(
+                  position: animation.drive(tween),
+                  child: child,
+                );
+              },
+            ),
           );
         }
         break;
@@ -39,7 +67,21 @@ class CustomNavBar extends StatelessWidget {
         if (currentRoute != '/favorite') {
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (context) => const FavoritePage()),
+            PageRouteBuilder(
+              pageBuilder: (context, animation, secondaryAnimation) => const FavoritePage(),
+              transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                const begin = Offset(0.5, 0.0);
+                const end = Offset.zero;
+                const curve = Curves.ease;
+
+                var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+
+                return SlideTransition(
+                  position: animation.drive(tween),
+                  child: child,
+                );
+              },
+            ),
           );
         }
         break;
@@ -47,7 +89,21 @@ class CustomNavBar extends StatelessWidget {
         if (currentRoute != '/profile') {
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (context) => const ProfilePage()),
+            PageRouteBuilder(
+              pageBuilder: (context, animation, secondaryAnimation) => const ProfilePage(),
+              transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                const begin = Offset(0.5, 0.0);
+                const end = Offset.zero;
+                const curve = Curves.ease;
+
+                var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+
+                return SlideTransition(
+                  position: animation.drive(tween),
+                  child: child,
+                );
+              },
+            ),
           );
         }
         break;
@@ -57,14 +113,14 @@ class CustomNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GNav(
-      selectedIndex: selectedIndex, // Highlight the active tab
+      selectedIndex: selectedIndex,
       tabBackgroundColor: const Color(0xFF1471D3),
       padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
       tabBorderRadius: 10,
       gap: 8,
       onTabChange: (index) {
         _onTabChange(context, index);
-        onTabChange(index); // Also call the passed function
+        onTabChange(index);
       },
       tabs: const [
         GButton(icon: Icons.home, text: 'Home'),
