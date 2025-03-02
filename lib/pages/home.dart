@@ -1,37 +1,55 @@
 import 'package:flutter/material.dart';
-import 'package:google_nav_bar/google_nav_bar.dart';
 import 'package:mad/pages/head_parts.dart';
+import 'package:mad/widgets/navbar.dart';
+import 'package:mad/pages/head_parts.dart'; // Import HeaderParts
+import 'package:mad/pages/search.dart';
+import 'package:mad/pages/favorite.dart';
+import 'package:mad/pages/profile.dart';
 
+class HomePage extends StatelessWidget {
+  const HomePage({super.key});
 
-class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
+  void _onTabChange(BuildContext context, int index) {
+    switch (index) {
+      case 0:
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const HomePage()),
+        );
+        break;
+      case 1:
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const SearchPage()),
+        );
+        break;
+      case 2:
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const FavoritePage()),
+        );
+        break;
+      case 3:
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const ProfilePage()),
+        );
+        break;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-
-      backgroundColor: Colors.white, // Set default background color to white
-      bottomNavigationBar: GNav(
-        tabBackgroundColor: const Color(0xFF1471D3),
-        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
-        tabBorderRadius: 10,
-        gap: 8,
-        tabs: const [
-          GButton(icon: Icons.home, text: 'Home'),
-          GButton(icon: Icons.search, text: 'Search'),
-          GButton(icon: Icons.favorite_border, text: 'Favorite'),
-          GButton(icon: Icons.account_circle, text: 'Profile'),
-        ],
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(0.0), // No appbar
+        child: Container(),
       ),
-      body: Container(
-        color: Colors.white, // Ensures ListView has a white background
-        child: ListView(
-          children: const [
-            HeaderParts(), // Header section
-          ],
-
-        ),
+      bottomNavigationBar: CustomNavBar(
+        selectedIndex: 0,
+        onTabChange: (index) => _onTabChange(context, index),
       ),
+      body: const HeaderParts(), // Use HeaderParts widget as body
     );
   }
 }
