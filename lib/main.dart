@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'pages/onboard.dart'; // Ensure this file exists
+import 'pages/onboard.dart'; 
+import 'pages/home.dart'; // Import HomeScreen
+import 'dart:developer'; // Dart's built-in logging
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized(); // Ensures widget binding is initialized
@@ -9,15 +11,15 @@ void main() async {
     await Firebase.initializeApp(
       options: FirebaseOptions(
         appId: '1:228865583868:android:d719a23e6d5c94ecf0c579',
-        apiKey: 'AIzaSyAWGN1-6I5uUTZWaUBYvmL7pZH0B-NZ5KA', // API Key from json
-        projectId: 'land-test-1fee6', // Project ID from json
-        messagingSenderId: '228865583868', // Sender ID from json
-        storageBucket: 'land-test-1fee6.firebasestorage.app', // Storage Bucket from json
+        apiKey: 'AIzaSyAWGN1-6I5uUTZWaUBYvmL7pZH0B-NZ5KA', 
+        projectId: 'land-test-1fee6', 
+        messagingSenderId: '228865583868',
+        storageBucket: 'land-test-1fee6.firebasestorage.app', 
       ),
-    ); // Initialize Firebase with options
-    print("Firebase Initialized");
+    ); 
+    log("Firebase Initialized");
   } catch (e) {
-    print("Firebase Initialization Error: $e");
+    log("Firebase Initialization Error: $e");
   }
 
   runApp(const MyApp());
@@ -31,7 +33,10 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: ThemeData(fontFamily: 'Poppins'),
-      home: OnboardingScreen(), // Show Onboarding first
+      home: const OnboardingScreen(), // Start with Onboarding
+      routes: {
+        '/home': (context) => const HomeScreen(), // Home Page
+      },
     );
   }
 }
