@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:mad/providers/favourite_provider.dart';
+import 'package:mad/models/Property_model.dart';
 
 class HeaderParts extends StatefulWidget {
   const HeaderParts({super.key});
@@ -220,11 +223,7 @@ class _HeaderPartsState extends State<HeaderParts> {
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
-              children: filteredItems.map((property) => _buildPopularCard(property, isFavorite, () {
-                setState(() {
-                  isFavorite = !isFavorite;
-                });
-              })).toList(),
+              children: filteredItems.map((property) => _buildPopularCard(property)).toList(),
             ),
           ),
         ],
@@ -232,76 +231,97 @@ class _HeaderPartsState extends State<HeaderParts> {
     );
   }
 
-Widget _buildPopularCard(Map<String, String> property, bool isFavorite, Function toggleFavorite) {
-  return Container(
-    width: 250,
-    margin: const EdgeInsets.only(right: 10),
-    decoration: BoxDecoration(
-      borderRadius: BorderRadius.circular(10),
-      boxShadow: [
-        BoxShadow(color: Colors.grey.shade100, blurRadius: 5, spreadRadius: 2),
-      ],
-    ),
-    child: Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          ClipRRect(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
-            child: Image.asset(
-              property["image"]!,
-              height: 130,
-              width: double.infinity,
-              fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => Container(
-                height: 130,
-                width: double.infinity,
-                color: Colors.grey[300],
-                child: const Center(child: Icon(Icons.image, size: 40, color: Colors.grey)),
+Widget _buildPopularCard(Map<String, String> property) {
+  return Consumer<FavoritesProvider>(
+    builder: (context, favoritesProvider, child) {
+      bool isFavorite = favoritesProvider.isFavorite(
+        Property(
+          name: property["name"]!,
+          location: property["location"]!,
+          image: property["image"]!,
+          category: property["catoegary"]!,
+        ),
+      );
+
+      return Container(
+        width: 250,
+        margin: const EdgeInsets.only(right: 10),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(10),
+          boxShadow: [
+            BoxShadow(color: Colors.grey.shade100, blurRadius: 5, spreadRadius: 2),
+          ],
+        ),
+        child: Card(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ClipRRect(
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
+                child: Image.asset(
+                  property["image"]!,
+                  height: 130,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => Container(
+                    height: 130,
+                    width: double.infinity,
+                    color: Colors.grey[300],
+                    child: const Center(child: Icon(Icons.image, size: 40, color: Colors.grey)),
+                  ),
+                ),
               ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(10.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Flexible(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        property["name"]!,
-                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                        overflow: TextOverflow.ellipsis,
+              Padding(
+                padding: const EdgeInsets.all(10.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Flexible(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            property["name"]!,
+                            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 5),
+                          Text(
+                            property["location"]!,
+                            style: const TextStyle(fontSize: 12, color: Colors.grey),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 5),
-                      Text(
-                        property["location"]!,
-                        style: const TextStyle(fontSize: 12, color: Colors.grey),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.favorite, color: isFavorite ? Colors.red : Colors.grey),
+                      onPressed: () {
+                        favoritesProvider.toggleFavorite(
+                          Property(
+                            name: property["name"]!,
+                            location: property["location"]!,
+                            image: property["image"]!,
+                            category: property["catoegary"]!,
+                          ),
+                        );
+                      },
+                    ),
+                  ],
                 ),
-                IconButton(
-                  icon: Icon(
-                    isFavorite ? Icons.favorite : Icons.favorite_border,
-                    color: isFavorite ? Colors.red : Colors.grey,
-                  ),
-                  onPressed: () => toggleFavorite(),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
-      ),
-    ),
+        ),
+      );
+    },
   );
 }
 
+}
 
-  }
+
+  
 

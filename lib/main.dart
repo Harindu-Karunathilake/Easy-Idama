@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'pages/loading_screen.dart'; // Ensure this file exists
+import 'package:mad/providers/favourite_provider.dart';
+import 'package:provider/provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -20,7 +22,13 @@ void main() async {
     print("❌ Firebase Initialization Error: $e");
   }
 
-  runApp(const MyApp());
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (context) => FavoritesProvider()),
+      ],
+      child: MyApp(),
+    ),);
 }
 
 class MyApp extends StatelessWidget {

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mad/pages/head_parts.dart';
 import 'package:mad/widgets/navbar.dart';
-import 'package:mad/pages/head_parts.dart'; // Import HeaderParts
+// Import HeaderParts
 import 'package:mad/pages/search.dart';
 import 'package:mad/pages/favorite.dart';
 import 'package:mad/pages/profile.dart';
@@ -26,7 +26,7 @@ class HomePage extends StatelessWidget {
       case 2:
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const FavoritePage()),
+          MaterialPageRoute(builder: (context) =>  FavoritesScreen()),
         );
         break;
       case 3:
