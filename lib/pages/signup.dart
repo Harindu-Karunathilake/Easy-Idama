@@ -30,7 +30,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         password: _passwordController.text,
       );
 
-      // Optionally, you can set the username in Firebase Authentication's displayName (but it's not mandatory)
+      
       await userCredential.user?.updateDisplayName(_usernameController.text);
 
       // Navigate to the SignIn screen after successful sign-up

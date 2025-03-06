@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class HeaderParts extends StatefulWidget {
   const HeaderParts({super.key});
@@ -8,9 +9,11 @@ class HeaderParts extends StatefulWidget {
 }
 
 class _HeaderPartsState extends State<HeaderParts> {
-  TextEditingController _searchController = TextEditingController();
+    
+  final TextEditingController _searchController = TextEditingController();
   String selectedCategory = "Home";
   bool isFavorite = false;
+  String userName = "User"; // Default name
 
   List<Map<String, String>> items = [
     {"name": "Beautiful Land in Kandy", "location": "Kandy, Sri Lanka", "image": 'assets/land.jpg',"catoegary":"Land"},
@@ -19,12 +22,23 @@ class _HeaderPartsState extends State<HeaderParts> {
     {"name": "Spacious Land in Jaffna", "location": "Jaffna, Sri Lanka", "image": 'assets/land.jpg',"catoegary":"Land"},
    
   ];
+
   List<Map<String, String>> filteredItems = [];
 
   @override
   void initState() {
     super.initState();
+    _getUserInfo(); // Fetch user info from Firebase
     filteredItems = items; // Initially show all items
+  }
+
+  void _getUserInfo() {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null && user.displayName != null) {
+      setState(() {
+        userName = user.displayName!;
+      });
+    }
   }
 
   void _filterItems(String query) {
@@ -40,6 +54,7 @@ class _HeaderPartsState extends State<HeaderParts> {
     _searchController.dispose();
     super.dispose();
   }
+
    void _selectCategory(String category) {
     _searchController.text = category; // Set category as search text
     _filterItems(category); // Filter based on category
@@ -84,10 +99,10 @@ class _HeaderPartsState extends State<HeaderParts> {
               border: Border.all(color: Colors.black, width: 1),
             ),
             child: Row(
-              children: [
-                const Icon(Icons.location_on, color: Colors.red),
-                const SizedBox(width: 5),
-                const Text(
+              children: const [
+                Icon(Icons.location_on, color: Colors.red),
+                SizedBox(width: 5),
+                Text(
                   "Colombo, Sri Lanka",
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
                 ),
@@ -113,17 +128,17 @@ class _HeaderPartsState extends State<HeaderParts> {
   }
 
   Widget _buildGreeting() {
-    return const Padding(
-      padding: EdgeInsets.symmetric(horizontal: 16.0),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            "Hey, Jonathan!",
-            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            "Hey, $userName!",
+            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
           ),
-          SizedBox(height: 5),
-          Text(
+          const SizedBox(height: 5),
+          const Text(
             "Let's start exploring",
             style: TextStyle(fontSize: 16, color: Colors.grey),
           ),
@@ -144,13 +159,12 @@ class _HeaderPartsState extends State<HeaderParts> {
           filled: true,
           fillColor: Colors.white,
           contentPadding: const EdgeInsets.symmetric(vertical: 12.0),
-            border: OutlineInputBorder(
+          border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(30),
-            borderSide: BorderSide(color: Colors.black),
-            ),
+            borderSide: const BorderSide(color: Colors.black),
           ),
         ),
-      
+      ),
     );
   }
 
@@ -232,7 +246,7 @@ class _HeaderPartsState extends State<HeaderParts> {
     );
   }
 
-Widget _buildPopularCard(Map<String, String> property, bool isFavorite, Function toggleFavorite) {
+  Widget _buildPopularCard(Map<String, String> property, bool isFavorite, Function toggleFavorite) {
   return Container(
     width: 250,
     margin: const EdgeInsets.only(right: 10),
@@ -294,7 +308,7 @@ Widget _buildPopularCard(Map<String, String> property, bool isFavorite, Function
                   onPressed: () => toggleFavorite(),
                 ),
               ],
-            ),
+       ),
           ),
         ],
       ),
@@ -304,4 +318,3 @@ Widget _buildPopularCard(Map<String, String> property, bool isFavorite, Function
 
 
   }
-
