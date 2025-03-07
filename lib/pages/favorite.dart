@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:mad/providers/favourite_provider.dart';
 import 'package:mad/models/Property_model.dart';
 import 'package:mad/pages/home.dart';
- // Adjust the path as necessary
+import 'package:mad/widgets/navbar.dart'; // Adjust the path as necessary
 
 class FavoritesScreen extends StatelessWidget {
   @override
@@ -41,6 +41,12 @@ class FavoritesScreen extends StatelessWidget {
                 );
               },
             ),
+      bottomNavigationBar: CustomNavBar(
+        selectedIndex: 2, // Set the appropriate index
+        onTabChange: (index) {
+          // Handle tab change
+        },
+      ), // Add your custom NavBar widget here
     );
   }
 }
