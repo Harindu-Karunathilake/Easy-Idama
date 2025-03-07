@@ -10,11 +10,11 @@ void main() async {
   try {
     await Firebase.initializeApp(
       options: FirebaseOptions(
-        appId: '1:228865583868:android:d719a23e6d5c94ecf0c579',
-        apiKey: 'AIzaSyAWGN1-6I5uUTZWaUBYvmL7pZH0B-NZ5KA',
-        projectId: 'land-test-1fee6',
-        messagingSenderId: '228865583868',
-        storageBucket: 'land-test-1fee6.firebasestorage.app',
+        appId: '1:687025568382:android:bbafdb91dff967f247b62f',
+        apiKey: 'AIzaSyAv-ixINvy84G_agSe2WsZ53dEZpMcCbQ8', // Restrict this key in Firebase settings!
+        projectId: 'easy-idama-1234',
+        messagingSenderId: '687025568382',
+        storageBucket: 'easy-idama-1234.firebasestorage.app',
       ),
     );
     print("🔥 Firebase Initialized");

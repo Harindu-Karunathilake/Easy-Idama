@@ -1,36 +1,26 @@
 {
   "project_info": {
-    "project_number": "228865583868",
-    "project_id": "land-test-1fee6",
-    "storage_bucket": "land-test-1fee6.firebasestorage.app"
+    "project_number": "687025568382",
+    "project_id": "easy-idama-1234",
+    "storage_bucket": "easy-idama-1234.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:228865583868:android:d719a23e6d5c94ecf0c579",
+        "mobilesdk_app_id": "1:687025568382:android:bbafdb91dff967f247b62f",
         "android_client_info": {
           "package_name": "com.example.mad"
         }
       },
-      "oauth_client": [
-        {
-          "client_id": "228865583868-nap7d6prik1tk484ellehi0jju0a540u.apps.googleusercontent.com",
-          "client_type": 3
-        }
-      ],
+      "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyAWGN1-6I5uUTZWaUBYvmL7pZH0B-NZ5KA"
+          "current_key": "AIzaSyAv-ixINvy84G_agSe2WsZ53dEZpMcCbQ8"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": [
-            {
-              "client_id": "228865583868-nap7d6prik1tk484ellehi0jju0a540u.apps.googleusercontent.com",
-              "client_type": 3
-            }
-          ]
+          "other_platform_oauth_client": []
         }
       }
     }
