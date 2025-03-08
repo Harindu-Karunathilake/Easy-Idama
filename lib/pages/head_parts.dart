@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:mad/providers/favourite_provider.dart';
 import 'package:mad/models/Property_model.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-
+import 'package:mad/pages/map.dart';
 
 
 class HeaderParts extends StatefulWidget {
@@ -74,7 +74,7 @@ class _HeaderPartsState extends State<HeaderParts> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildHeader(),
+            _buildHeader(context),
             const SizedBox(height: 10),
             _buildGreeting(),
             const SizedBox(height: 15),
@@ -91,27 +91,35 @@ class _HeaderPartsState extends State<HeaderParts> {
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: Colors.black, width: 1),
-            ),
-            child: Row(
-              children: const [
-                Icon(Icons.location_on, color: Colors.red),
-                SizedBox(width: 5),
-                Text(
-                  "Colombo, Sri Lanka",
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-                ),
-              ],
+          GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => MapsScreen()), // Ensure MapsScreen is defined in maps.dart
+              );
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.black, width: 1),
+              ),
+              child: Row(
+                children: const [
+                  Icon(Icons.location_on, color: Colors.red),
+                  SizedBox(width: 5),
+                  Text(
+                    "Colombo, Sri Lanka",
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                  ),
+                ],
+              ),
             ),
           ),
           Row(
