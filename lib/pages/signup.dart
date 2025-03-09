@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:mad/services/auth_service.dart'; // Import AuthService
 import 'signin.dart';
 
 class SignUpScreen extends StatefulWidget {
@@ -14,7 +15,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   bool _obscurePassword = true;  // To toggle password visibility
   bool _obscureConfirmPassword = true; // To toggle confirm password visibility
 
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final AuthService _authService = AuthService(); // Create an instance of AuthService
 
   // TextEditingController for email, password, and username fields
   final TextEditingController _emailController = TextEditingController();
@@ -24,14 +25,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
   // Method to handle sign-up
   Future<void> _signUp() async {
     try {
-      // Create user with email and password
-      final UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
-        email: _emailController.text,
-        password: _passwordController.text,
+      // Register user with AuthService
+      await _authService.registerUser(
+        _emailController.text,
+        _passwordController.text,
+        _usernameController.text,
       );
-
-      
-      await userCredential.user?.updateDisplayName(_usernameController.text);
 
       // Navigate to the SignIn screen after successful sign-up
       Navigator.pushReplacement(
