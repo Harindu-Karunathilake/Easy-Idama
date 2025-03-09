@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:mad/providers/favourite_provider.dart';
 import 'package:mad/models/Property_model.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 
 
@@ -37,14 +38,31 @@ class _HeaderPartsState extends State<HeaderParts> {
     filteredItems = items; // Initially show all items
   }
 
-  void _getUserInfo() {
-    User? user = FirebaseAuth.instance.currentUser;
-    if (user != null && user.displayName != null) {
+  void _getUserInfo() async {
+  User? user = FirebaseAuth.instance.currentUser;
+
+  if (user != null) {
+    try {
+      DocumentSnapshot userDoc =
+          await FirebaseFirestore.instance.collection('Users').doc(user.uid).get();
+
+      if (userDoc.exists) {
+        setState(() {
+          userName = userDoc['name'] ?? 'Unknown User'; // Get the 'name' field from Firestore
+        });
+      } else {
+        setState(() {
+          userName = 'No Name Found';
+        });
+      }
+    } catch (e) {
+      print('Error fetching user data: $e');
       setState(() {
-        userName = user.displayName!;
+        userName = 'Error Loading Name';
       });
     }
   }
+}
 
   void _filterItems(String query) {
     setState(() {
