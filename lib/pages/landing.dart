@@ -3,7 +3,7 @@ import 'signin.dart';
 
 
 class SplashScreen extends StatefulWidget {
-  const SplashScreen({super.key});
+  const SplashScreen({super.key, required Map<String, String> property});
 
   @override
   State<SplashScreen> createState() => _SplashScreenState();
