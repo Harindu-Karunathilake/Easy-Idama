@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'signup.dart';
 import 'forgot_pw.dart';
 import 'home.dart'; // Import the HomeScreen
+import 'admin/admin_dashboard.dart'; // Import the AdminDashboardScreen
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -22,6 +24,7 @@ class _SignInScreenState extends State<SignInScreen> {
   // Firebase Authentication instance
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FlutterSecureStorage storage = const FlutterSecureStorage();
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   @override
   void initState() {
@@ -29,23 +32,39 @@ class _SignInScreenState extends State<SignInScreen> {
     _loadSavedCredentials(); // Load saved credentials when screen opens
   }
 
-  // Sign in method
-  Future<void> _signIn() async {
+   Future<void> _signIn() async {
     try {
       final UserCredential userCredential = await _auth.signInWithEmailAndPassword(
         email: _emailController.text,
         password: _passwordController.text,
       );
 
-      _saveCredentials(); // Save credentials if "Remember Me" is checked
+      // Save credentials if "Remember Me" is checked
+      _saveCredentials();
 
-      // Navigate to Home Screen if sign-in is successful
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const HomePage(),
-        ),
-      );
+      // Fetch user role from Firestore
+      String userId = userCredential.user!.uid;
+      DocumentSnapshot userDoc = await _firestore.collection('Users').doc(userId).get();
+
+      if (userDoc.exists) {
+        String role = userDoc['role'] ?? 'user'; // Default to 'user' if role is missing
+
+        if (role == 'admin') {
+          // Navigate to Admin Dashboard
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) =>  AdminDashboard()),
+          );
+        } else {
+          // Navigate to Regular User Home Screen
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const HomePage()),
+          );
+        }
+      } else {
+        _showErrorDialog('User data not found.');
+      }
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found') {
         _showErrorDialog('No user found for that email.');
