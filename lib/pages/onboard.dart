@@ -50,7 +50,7 @@ class _OnBoardingScreenState extends State<OnboardingScreen> {
                     Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const SplashScreen(),
+                        builder: (context) => const SplashScreen(property: {},),
                       ),
                     );
                   },
@@ -77,7 +77,7 @@ class _OnBoardingScreenState extends State<OnboardingScreen> {
                       Navigator.pushReplacement(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const SplashScreen(),
+                          builder: (context) => const SplashScreen(property: {},),
                         ),
                       );
                     } else {
