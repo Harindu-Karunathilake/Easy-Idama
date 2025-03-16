@@ -42,4 +42,6 @@ class AuthService {
       print('Error: $e');
     }
   }
+
+  deleteUserAuth(String email) {}
 }
