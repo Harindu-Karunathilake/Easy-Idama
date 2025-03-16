@@ -262,9 +262,12 @@ class _HeaderPartsState extends State<HeaderParts> {
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             child: Column(
               children: [
-                Image.asset(property["image"]!, height: 130, fit:BoxFit.fill),
+                ClipRRect(
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
+                  child: Image.asset(property["image"]!, height: 130, width:400, fit: BoxFit.cover),
+                ),
                 Padding(
-                  padding: EdgeInsets.all(5),
+                  padding: EdgeInsets.all(10),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
