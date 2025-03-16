@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'user_management.dart'; 
+import 'property_management.dart'; // Import the Property Management page
 
 class AdminDashboard extends StatelessWidget {
+  const AdminDashboard({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -26,6 +29,16 @@ class AdminDashboard extends StatelessWidget {
                 );
               },
               child: Text('Manage Users & Roles'),
+            ),
+            SizedBox(height: 10), // Add spacing
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => PropertyManagementPage()), // Navigate to Property Management
+                );
+              },
+              child: Text('Manage Properties'),
             ),
           ],
         ),
