@@ -52,39 +52,41 @@ class _HeaderPartsState extends State<HeaderParts> {
     super.initState();
     _getUserInfo();
     filteredItems = items;
+    selectedCategory = "All";
   }
 
   void _getUserInfo() async {
-  User? user = FirebaseAuth.instance.currentUser;
+    User? user = FirebaseAuth.instance.currentUser;
 
-  if (user != null) {
-    try {
-      DocumentSnapshot userDoc =
-          await FirebaseFirestore.instance.collection('Users').doc(user.uid).get();
+    if (user != null) {
+      try {
+        DocumentSnapshot userDoc =
+            await FirebaseFirestore.instance.collection('Users').doc(user.uid).get();
 
-      if (userDoc.exists) {
+        if (userDoc.exists) {
+          setState(() {
+            userName = userDoc['name'] ?? 'Unknown User';
+          });
+        } else {
+          setState(() {
+            userName = 'No Name Found';
+          });
+        }
+      } catch (e) {
+        print('Error fetching user data: $e');
         setState(() {
-          userName = userDoc['name'] ?? 'Unknown User'; // Get the 'name' field from Firestore
-        });
-      } else {
-        setState(() {
-          userName = 'No Name Found';
+          userName = 'Error Loading Name';
         });
       }
-    } catch (e) {
-      print('Error fetching user data: $e');
-      setState(() {
-        userName = 'Error Loading Name';
-      });
     }
   }
-}
 
   void _filterItems(String query) {
     setState(() {
       filteredItems = items
           .where((item) =>
-              item["name"]!.toLowerCase().contains(query.toLowerCase()))
+              item["name"]!.toLowerCase().contains(query.toLowerCase()) &&
+              (selectedCategory == "All" || item["category"] == selectedCategory))
           .toList();
     });
   }
@@ -92,12 +94,15 @@ class _HeaderPartsState extends State<HeaderParts> {
   void _selectCategory(String category) {
     setState(() {
       selectedCategory = category;
-      _filterItems(category);
+      _filterItems(_searchController.text);  // Re-filter based on the selected category
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    bool showPopularRecommended =
+        selectedCategory == "All" && _searchController.text.isEmpty;
+
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -106,8 +111,11 @@ class _HeaderPartsState extends State<HeaderParts> {
           _buildGreeting(),
           _buildSearchBar(),
           _buildCategorySelection(),
-          _buildHorizontalList(title: "Popular"),
-          _buildHorizontalList(title: "Recommended"),
+          if (showPopularRecommended) ...[
+            _buildHorizontalList(title: "Popular"),
+            _buildHorizontalList(title: "Recommended"),
+          ],
+          _buildFilteredPropertyList(),
         ],
       ),
     );
@@ -146,11 +154,17 @@ class _HeaderPartsState extends State<HeaderParts> {
   }
 
   Widget _buildCategorySelection() {
-    List<String> categories = ["Home", "Land", "Apartment"];
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children:
-          categories.map((category) => _buildCategoryButton(category)).toList(),
+    List<String> categories = ["All", "Home", "Land", "Apartment"];
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: categories.map((category) {
+          return Container(
+            margin: EdgeInsets.symmetric(horizontal: 5),
+            child: _buildCategoryButton(category),
+          );
+        }).toList(),
+      ),
     );
   }
 
@@ -158,7 +172,6 @@ class _HeaderPartsState extends State<HeaderParts> {
     return GestureDetector(
       onTap: () => _selectCategory(category),
       child: Container(
-        margin: EdgeInsets.symmetric(horizontal: 5),
         padding: EdgeInsets.symmetric(horizontal: 15, vertical: 10),
         decoration: BoxDecoration(
           color: selectedCategory == category ? Colors.blue : Colors.white,
@@ -187,9 +200,40 @@ class _HeaderPartsState extends State<HeaderParts> {
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
-              children: filteredItems.map((property) => _buildPropertyCard(property)).toList(),
+              children: items.map((property) {
+                return Container(
+                  width: 250,
+                  margin: EdgeInsets.only(right: 10, bottom: 10),
+                  child: _buildPropertyCard(property),
+                );
+              }).toList(),
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFilteredPropertyList() {
+    bool isSearchOrCategoryActive = _searchController.text.isNotEmpty || selectedCategory != "All";
+    return Padding(
+      padding: EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (isSearchOrCategoryActive)
+            Text("Results", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+          SizedBox(height: 10),
+          isSearchOrCategoryActive
+              ? ListView.builder(
+                  shrinkWrap: true,
+                  physics: NeverScrollableScrollPhysics(),
+                  itemCount: filteredItems.length,
+                  itemBuilder: (context, index) {
+                    return _buildPropertyCard(filteredItems[index]);
+                  },
+                )
+              : Container(),
         ],
       ),
     );
@@ -214,42 +258,41 @@ class _HeaderPartsState extends State<HeaderParts> {
               ),
             );
           },
-          child: Container(
-            width: 250,
-            margin: EdgeInsets.only(right: 10),
-            child: Card(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-              child: Column(
-                children: [
-                  Image.asset(property["image"]!, height: 130, fit: BoxFit.cover),
-                  Padding(
-                    padding: EdgeInsets.all(10),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Column(
+          child: Card(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            child: Column(
+              children: [
+                Image.asset(property["image"]!, height: 130, fit:BoxFit.fill),
+                Padding(
+                  padding: EdgeInsets.all(5),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                        Expanded(
+                        child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(property["name"]!, style: TextStyle(fontWeight: FontWeight.bold)),
-                            Text(property["location"]!, style: TextStyle(color: Colors.grey)),
+                          Text(property["name"]!, style: TextStyle(fontWeight: FontWeight.bold)),
+                          Text(property["location"]!, style: TextStyle(color: Colors.grey)),
                           ],
                         ),
-                        IconButton(
-                          icon: Icon(Icons.favorite, color: isFavorite ? Colors.red : Colors.grey),
-                          onPressed: () {
-                            favoritesProvider.toggleFavorite(Property(
-                              name: property["name"]!,
-                              location: property["location"]!,
-                              image: property["image"]!,
-                              category: property["category"]!,
-                            ));
-                          },
                         ),
-                      ],
-                    ),
+                      
+                      IconButton(
+                        icon: Icon(Icons.favorite, color: isFavorite ? Colors.red : Colors.grey),
+                        onPressed: () {
+                          favoritesProvider.toggleFavorite(Property(
+                            name: property["name"]!,
+                            location: property["location"]!,
+                            image: property["image"]!,
+                            category: property["category"]!,
+                          ));
+                        },
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         );
