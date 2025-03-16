@@ -128,7 +128,7 @@ class _HeaderPartsState extends State<HeaderParts> {
     Padding(
       padding: EdgeInsets.all(10.0), // Add padding around the avatar
       child: CircleAvatar(
-        backgroundImage: AssetImage(''), // Add your image path here
+        backgroundImage: NetworkImage('https://i.postimg.cc/cCsYDjvj/user-2.png'), // Add your image path here
       ),
     ),
   ],
