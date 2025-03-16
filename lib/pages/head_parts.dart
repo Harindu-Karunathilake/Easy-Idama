@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mad/pages/chats.dart';
 import 'package:mad/pages/land_details_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:mad/providers/favourite_provider.dart';
@@ -158,13 +159,18 @@ class _HeaderPartsState extends State<HeaderParts> {
           Row(
             children: [
               IconButton(
-                icon: const Icon(Icons.notifications, color: Colors.black),
-                onPressed: () {},
+                icon: const Icon(Icons.chat_bubble, color: Colors.black),
+                onPressed: () {
+                   Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => ChatsScreen()),
+    );
+                },
               ),
               const SizedBox(width: 8),
               const CircleAvatar(
                 radius: 18,
-                backgroundImage: AssetImage('assets/profile.jpg'),
+                backgroundImage: NetworkImage('https://i.postimg.cc/cCsYDjvj/user-2.pngg'),
               ),
             ],
           ),
