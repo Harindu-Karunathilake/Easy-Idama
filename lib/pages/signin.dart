@@ -32,7 +32,7 @@ class _SignInScreenState extends State<SignInScreen> {
     _loadSavedCredentials(); // Load saved credentials when screen opens
   }
 
-   Future<void> _signIn() async {
+  Future<void> _signIn() async {
     try {
       final UserCredential userCredential = await _auth.signInWithEmailAndPassword(
         email: _emailController.text,
@@ -47,13 +47,23 @@ class _SignInScreenState extends State<SignInScreen> {
       DocumentSnapshot userDoc = await _firestore.collection('Users').doc(userId).get();
 
       if (userDoc.exists) {
+        String status = userDoc['status'] ?? 'active'; // Default to active if status is missing
         String role = userDoc['role'] ?? 'user'; // Default to 'user' if role is missing
+
+        if (status.toLowerCase() == 'inactive') {
+          // Sign out immediately if user is inactive
+          await _auth.signOut();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Your account is inactive. Contact support for assistance.")),
+          );
+          return;
+        }
 
         if (role == 'admin') {
           // Navigate to Admin Dashboard
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (context) =>  AdminDashboard()),
+            MaterialPageRoute(builder: (context) => AdminDashboard()),
           );
         } else {
           // Navigate to Regular User Home Screen
