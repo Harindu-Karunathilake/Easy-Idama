@@ -14,10 +14,52 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  String activeTab = 'Transaction';
+  String activeTab = 'Transaction'; // Default active tab
+  final ScrollController _scrollController = ScrollController();
+  final List<String> tabs = ['Transaction', 'Listings', 'Sold', 'Reviews'];
   int listingsCount = 0;
   int soldCount = 0;
   int reviewsCount = 0;
+
+  void _selectTab(String tab) {
+    setState(() {
+      activeTab = tab;
+    });
+
+    int index = tabs.indexOf(tab);
+    double screenWidth = MediaQuery.of(context).size.width;
+    double tabWidth = 100;
+    double scrollTo = (index * tabWidth) - (screenWidth / 2) + (tabWidth / 2);
+
+    _scrollController.animateTo(
+      scrollTo.clamp(0, _scrollController.position.maxScrollExtent),
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
+  }
+
+  Widget _tabButton(String tabName) {
+    bool isSelected = activeTab == tabName;
+    return GestureDetector(
+      onTap: () => _selectTab(tabName),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        margin: const EdgeInsets.symmetric(horizontal: 5),
+        decoration: BoxDecoration(
+          color: isSelected ? Colors.blue : Colors.grey[200],
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Text(
+          tabName,
+          style: TextStyle(
+            fontSize: 16,
+            color: isSelected ? Colors.white : Colors.black,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+          ),
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -30,8 +72,7 @@ class _ProfilePageState extends State<ProfilePage> {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                    builder: (context) => const EditProfilePage()),
+                MaterialPageRoute(builder: (context) => const EditProfilePage()),
               );
             },
           ),
@@ -49,8 +90,6 @@ class _ProfilePageState extends State<ProfilePage> {
       bottomNavigationBar: CustomNavBar(
         selectedIndex: 3,
         onTabChange: (index) {
-          // You can add any logic here if needed when the tab changes.
-          // For example, you might want to update some state.
           print('Tab changed to index: $index');
         },
       ),
@@ -71,92 +110,47 @@ class _ProfilePageState extends State<ProfilePage> {
               'Mathew Adam',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
-            const Text('mathew@gmail.com',
-                style: TextStyle(color: Colors.grey)),
+            const Text('mathew@gmail.com', style: TextStyle(color: Colors.grey)),
             const SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                _infoCard(listingsCount.toString(), 'Listings'),
-                GestureDetector(
-                  onTap: () async {
-                    final updatedSoldCount = await Navigator.push(
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.grey[50],
+                borderRadius: BorderRadius.circular(10),
+              ),
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: SingleChildScrollView(
+                controller: _scrollController,
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: tabs.map((tab) => _tabButton(tab)).toList(),
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+            if (activeTab == 'Listings')
+              Align(
+                alignment: Alignment.centerRight,
+                child: FloatingActionButton(
+                  onPressed: () async {
+                    final newItemAdded = await Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const SoldPage()),
+                      MaterialPageRoute(builder: (context) => const AddListingPage()),
                     );
-                    if (updatedSoldCount != null) {
+                    if (newItemAdded == true) {
                       setState(() {
-                        soldCount = updatedSoldCount;
+                        listingsCount++;
                       });
                     }
                   },
-                  child: _infoCard(soldCount.toString(), 'Sold'),
+                  mini: true,
+                  child: const Icon(Icons.add, size: 20),
+                  backgroundColor: Colors.blue,
                 ),
-                GestureDetector(
-                  onTap: () async {
-                    final updatedReviewsCount = await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const ReviewsPage()),
-                    );
-                    if (updatedReviewsCount != null) {
-                      setState(() {
-                        reviewsCount = updatedReviewsCount;
-                      });
-                    }
-                  },
-                  child: _infoCard(reviewsCount.toString(), 'Reviews'),
-                ),
-              ],
-            ),
+              ),
             const SizedBox(height: 20),
-            Column(
-              children: [
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.grey[50],
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      _tabButton('Transaction'),
-                      _tabButton('Listings'),
-                      _tabButton('Sold'),
-                      _tabButton('Reviews'),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 10),
-                if (activeTab == 'Listings')
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: FloatingActionButton(
-                      onPressed: () async {
-                        final newItemAdded = await Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => const AddListingPage()),
-                        );
-                        if (newItemAdded == true) {
-                          setState(() {
-                            listingsCount++;
-                          });
-                        }
-                      },
-                      mini: true,
-                      child: const Icon(Icons.add, size: 20),
-                      backgroundColor: Colors.blue,
-                    ),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            if (activeTab == 'Transaction')
-              _emptySection('No Transactions available'),
+            if (activeTab == 'Transaction') _emptySection('No Transactions available'),
             if (activeTab == 'Listings') _emptySection('No listings available'),
-            if (activeTab == 'Sold') _emptySection('No sold item yet'),
+            if (activeTab == 'Sold') _emptySection('No sold items yet'),
             if (activeTab == 'Reviews') _emptySection('No reviews yet'),
           ],
         ),
@@ -184,46 +178,6 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _tabButton(String label) {
-    bool isActive = label == activeTab;
-    return TextButton(
-      onPressed: () {
-        setState(() {
-          activeTab = label;
-        });
-      },
-      style: TextButton.styleFrom(
-        foregroundColor: isActive ? Colors.white : Colors.blue,
-        backgroundColor: isActive ? Colors.blue : Colors.transparent,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-        ),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          fontSize: 16,
-          fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
-        ),
-      ),
-    );
-  }
-
-  Widget _infoCard(String value, String label) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 10),
-      child: Column(
-        children: [
-          Text(value,
-              style:
-                  const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-          Text(label, style: const TextStyle(color: Colors.grey)),
-        ],
-      ),
-    );
-  }
-
   Widget _emptySection(String message) {
     return Center(
       child: Padding(
@@ -235,4 +189,4 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
     );
   }
-}
+} 

@@ -123,11 +123,16 @@ class _HeaderPartsState extends State<HeaderParts> {
 
   Widget _buildHeader() {
     return AppBar(
-      actions: [
-        IconButton(icon: Icon(Icons.notifications), onPressed: () {}),
-        CircleAvatar(backgroundImage: AssetImage('assets/profile.jpg')),
-      ],
-    );
+  actions: [
+    IconButton(icon: Icon(Icons.notifications), onPressed: () {}),
+    Padding(
+      padding: EdgeInsets.all(10.0), // Add padding around the avatar
+      child: CircleAvatar(
+        backgroundImage: AssetImage(''), // Add your image path here
+      ),
+    ),
+  ],
+);
   }
 
   Widget _buildGreeting() {
