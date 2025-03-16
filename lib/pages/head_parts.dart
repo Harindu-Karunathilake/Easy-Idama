@@ -5,6 +5,7 @@ import 'package:mad/providers/favourite_provider.dart';
 import 'package:mad/models/Property_model.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:mad/pages/map.dart';
 
 class HeaderParts extends StatefulWidget {
   const HeaderParts({super.key});
@@ -107,7 +108,7 @@ class _HeaderPartsState extends State<HeaderParts> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildHeader(),
+          _buildHeader(context),
           _buildGreeting(),
           _buildSearchBar(),
           _buildCategorySelection(),
@@ -121,18 +122,55 @@ class _HeaderPartsState extends State<HeaderParts> {
     );
   }
 
-  Widget _buildHeader() {
-    return AppBar(
-  actions: [
-    IconButton(icon: Icon(Icons.notifications), onPressed: () {}),
-    Padding(
-      padding: EdgeInsets.all(10.0), // Add padding around the avatar
-      child: CircleAvatar(
-        backgroundImage: NetworkImage('https://i.postimg.cc/cCsYDjvj/user-2.png'), // Add your image path here
+
+
+  Widget _buildHeader(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => MapsScreen()), // Ensure MapsScreen is defined in maps.dart
+              );
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.black, width: 1),
+              ),
+              child: Row(
+                children: const [
+                  Icon(Icons.location_on, color: Colors.red),
+                  SizedBox(width: 5),
+                  Text(
+                    "Colombo, Sri Lanka",
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.notifications, color: Colors.black),
+                onPressed: () {},
+              ),
+              const SizedBox(width: 8),
+              const CircleAvatar(
+                radius: 18,
+                backgroundImage: AssetImage('assets/profile.jpg'),
+              ),
+            ],
+          ),
+        ],
       ),
-    ),
-  ],
-);
+    );
   }
 
   Widget _buildGreeting() {
