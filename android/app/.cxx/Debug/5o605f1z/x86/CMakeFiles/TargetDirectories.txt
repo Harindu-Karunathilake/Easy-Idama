@@ -1,2 +1,0 @@
-C:/Users/yashira de silva/Desktop/MAD/Easy-Idama/android/app/.cxx/Debug/5o605f1z/x86/CMakeFiles/edit_cache.dir
-C:/Users/yashira de silva/Desktop/MAD/Easy-Idama/android/app/.cxx/Debug/5o605f1z/x86/CMakeFiles/rebuild_cache.dir
