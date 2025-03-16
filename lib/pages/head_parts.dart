@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mad/pages/chats.dart';
 import 'package:mad/pages/land_details_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:mad/providers/favourite_provider.dart';
@@ -124,7 +125,12 @@ class _HeaderPartsState extends State<HeaderParts> {
   Widget _buildHeader() {
     return AppBar(
   actions: [
-    IconButton(icon: Icon(Icons.notifications), onPressed: () {}),
+    IconButton(icon: Icon(Icons.chat_bubble), onPressed: () {
+      Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => ChatsScreen()),
+    );
+    }),
     Padding(
       padding: EdgeInsets.all(10.0), // Add padding around the avatar
       child: CircleAvatar(
