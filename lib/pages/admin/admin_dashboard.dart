@@ -1,5 +1,5 @@
-
 import 'package:flutter/material.dart';
+import 'user_management.dart'; 
 
 class AdminDashboard extends StatelessWidget {
   @override
@@ -7,9 +7,28 @@ class AdminDashboard extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text('Admin Dashboard'),
+        backgroundColor: Colors.blue,
       ),
       body: Center(
-        child: Text('Welcome to the Admin Dashboard!'),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'Welcome to the Admin Dashboard!',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => UserRoleManagementScreen()),
+                );
+              },
+              child: Text('Manage Users & Roles'),
+            ),
+          ],
+        ),
       ),
     );
   }
