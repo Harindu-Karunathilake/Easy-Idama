@@ -5,9 +5,12 @@ import 'package:mad/pages/sold.dart';
 import 'package:mad/pages/reviews.dart';
 import 'package:mad/pages/edit_profile.dart';
 import 'package:mad/pages/settings.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
+  
 
   @override
   State<ProfilePage> createState() => _ProfilePageState();
@@ -20,6 +23,34 @@ class _ProfilePageState extends State<ProfilePage> {
   int listingsCount = 0;
   int soldCount = 0;
   int reviewsCount = 0;
+  String userName = "User";
+  String email = "Email";
+  void _getUserInfo() async {
+    User? user = FirebaseAuth.instance.currentUser;
+
+    if (user != null) {
+      try {
+        DocumentSnapshot userDoc =
+            await FirebaseFirestore.instance.collection('Users').doc(user.uid).get();
+
+        if (userDoc.exists) {
+          setState(() {
+            userName = userDoc['name'] ?? 'Unknown User';
+            email = userDoc['email'] ?? 'Unknown Email';
+          });
+        } else {
+          setState(() {
+            userName = 'No Name Found';
+          });
+        }
+      } catch (e) {
+        print('Error fetching user data: $e');
+        setState(() {
+          userName = 'Error Loading Name';
+        });
+      }
+    }
+  }
 
   void _selectTab(String tab) {
     setState(() {
@@ -37,6 +68,12 @@ class _ProfilePageState extends State<ProfilePage> {
       curve: Curves.easeInOut,
     );
   }
+
+@override
+void initState() {
+  super.initState();
+  _getUserInfo(); // Fetch user information when the page initializes
+}
 
   Widget _tabButton(String tabName) {
     bool isSelected = activeTab == tabName;
@@ -102,15 +139,15 @@ class _ProfilePageState extends State<ProfilePage> {
               onTap: _showProfilePicture,
               child: const CircleAvatar(
                 radius: 50,
-                backgroundImage: AssetImage('assets/man.jpg'),
+                backgroundImage: AssetImage('assets/profile.jpg'),
               ),
             ),
             const SizedBox(height: 10),
-            const Text(
-              'Mathew Adam',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            Text(
+              "$userName",
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
-            const Text('mathew@gmail.com', style: TextStyle(color: Colors.grey)),
+            Text("$email", style: const TextStyle(color: Colors.grey)),
             const SizedBox(height: 20),
             Container(
               decoration: BoxDecoration(
