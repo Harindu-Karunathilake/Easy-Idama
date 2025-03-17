@@ -1,534 +1,159 @@
-//message
-
-
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
-class MessagesScreen extends StatelessWidget {
-  const MessagesScreen({super.key});
+class MessagesScreen extends StatefulWidget {
+  final String receiverId;
+  final String receiverName;
+
+  const MessagesScreen({super.key, required this.receiverId, required this.receiverName});
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        centerTitle: false,
-        elevation: 0,
-        backgroundColor: const Color(0xFF1471D3),
-        foregroundColor: Colors.white,
-        automaticallyImplyLeading: false,
-        title: const Row(
-          children: [
-            BackButton(),
-            CircleAvatar(
-              backgroundImage:
-                  NetworkImage("https://i.postimg.cc/cCsYDjvj/user-2.png"),
-            ),
-            SizedBox(width: 16.0 * 0.75),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "Kristin Watson",
-                  style: TextStyle(fontSize: 16),
-                ),
-                Text(
-                  "Active 3m ago",
-                  style: TextStyle(fontSize: 12),
-                )
-              ],
-            )
-          ],
-        ),
-        actions: [
-        
-          const SizedBox(width: 16.0 / 2),
-        ],
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: ListView.builder(
-                itemCount: demeChatMessages.length,
-                itemBuilder: (context, index) =>
-                    Message(message: demeChatMessages[index]),
-              ),
-            ),
-          ),
-          const ChatInputField(),
-        ],
-      ),
-    );
+  State<MessagesScreen> createState() => _MessagesScreenState();
+}
+
+class _MessagesScreenState extends State<MessagesScreen> {
+  final TextEditingController _messageController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
+  late String chatRoomId;
+
+  @override
+  void initState() {
+    super.initState();
+    String currentUserId = FirebaseAuth.instance.currentUser!.uid;
+    chatRoomId = _generateChatRoomId(currentUserId, widget.receiverId);
   }
-}
 
-class ChatInputField extends StatefulWidget {
-  const ChatInputField({super.key});
+  /// 🔹 Generate a consistent Chat Room ID (ensures same ID for both users)
+  String _generateChatRoomId(String userId1, String userId2) {
+    List<String> sortedIds = [userId1, userId2]..sort();
+    return "${sortedIds[0]}_${sortedIds[1]}";
+  }
 
-  @override
-  State<ChatInputField> createState() => _ChatInputFieldState();
-}
+  void sendMessage() async {
+    if (_messageController.text.trim().isEmpty) return;
 
-class _ChatInputFieldState extends State<ChatInputField> {
-  bool _showAttachment = false;
+    String currentUserId = FirebaseAuth.instance.currentUser!.uid;
 
-  void _updateAttachmentState() {
-    setState(() {
-      _showAttachment = !_showAttachment;
+    try {
+      await FirebaseFirestore.instance.collection('chats').doc(chatRoomId).collection('messages').add({
+        'senderId': currentUserId,
+        'receiverId': widget.receiverId,
+        'text': _messageController.text.trim(),
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+
+      print("Message sent successfully!");
+      _messageController.clear();
+      _scrollToBottom();
+    } catch (e) {
+      print("Error sending message: $e");
+    }
+  }
+
+  void _scrollToBottom() {
+    Future.delayed(const Duration(milliseconds: 300), () {
+      if (_scrollController.hasClients) {
+        _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+      }
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 16.0,
-        vertical: 16.0 / 2,
+    String currentUserId = FirebaseAuth.instance.currentUser!.uid;
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.receiverName),
+        backgroundColor: const Color(0xFF1471D3),
+        foregroundColor: Colors.white,
       ),
-      decoration: BoxDecoration(
-        color: Theme.of(context).scaffoldBackgroundColor,
-        boxShadow: [
-          BoxShadow(
-            offset: const Offset(0, -4),
-            blurRadius: 32,
-            color: const Color(0xFF1471D3).withOpacity(0.08),
-          ),
-        ],
-      ),
-      child: SafeArea(
-        child: Column(
-          children: [
-            Row(
-              children: [
-                const Icon(Icons.mic, color: Color(0xFF1471D3)),
-                const SizedBox(width: 16.0),
-                Expanded(
-                  child: Row(
-                    children: [
-                      const SizedBox(width: 16.0 / 4),
-                      Expanded(
-                        child: TextField(
-                          decoration: InputDecoration(
-                            hintText: "Type message",
-                            suffixIcon: SizedBox(
-                              width: 65,
-                              child: Row(
-                                children: [
-                                  InkWell(
-                                    onTap: _updateAttachmentState,
-                                    child: Icon(
-                                      Icons.attach_file,
-                                      color: _showAttachment
-                                          ? const Color(0xFF1471D3)
-                                          : Theme.of(context)
-                                              .textTheme
-                                              .bodyLarge!
-                                              .color!
-                                              .withOpacity(0.64),
-                                    ),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 16.0 / 2),
-                                    child: Icon(
-                                      Icons.camera_alt_outlined,
-                                      color: Theme.of(context)
-                                          .textTheme
-                                          .bodyLarge!
-                                          .color!
-                                          .withOpacity(0.64),
-                                    ),
-                                  ),
-                                ],
-                              ),
+      body: Column(
+        children: [
+          Expanded(
+            child: StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('chats')
+                  .doc(chatRoomId)
+                  .collection('messages')
+                  .orderBy('timestamp', descending: false)
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                  return const Center(child: Text("No messages yet"));
+                }
+
+                WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+
+                return ListView(
+                  controller: _scrollController,
+                  children: snapshot.data!.docs.map((doc) {
+                    Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+                    bool isSender = data['senderId'] == currentUserId;
+                    String time = data['timestamp'] != null
+                        ? DateFormat.jm().format((data['timestamp'] as Timestamp).toDate())
+                        : "Sending...";
+
+                    return Align(
+                      alignment: isSender ? Alignment.centerRight : Alignment.centerLeft,
+                      child: Container(
+                        margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: isSender ? Colors.blue : Colors.grey[300],
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: isSender ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              data['text'] ?? "",
+                              style: TextStyle(color: isSender ? Colors.white : Colors.black),
                             ),
-                            filled: true,
-                            fillColor:
-                                const Color(0xFF1471D3).withOpacity(0.08),
-                            contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 16.0 * 1.5, vertical: 16.0),
-                            border: const OutlineInputBorder(
-                              borderSide: BorderSide.none,
-                              borderRadius:
-                                  BorderRadius.all(Radius.circular(50)),
+                            Text(
+                              time,
+                              style: TextStyle(fontSize: 10, color: isSender ? Colors.white70 : Colors.black54),
                             ),
-                          ),
+                          ],
                         ),
                       ),
-                    ],
+                    );
+                  }).toList(),
+                );
+              },
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _messageController,
+                    decoration: InputDecoration(
+                      hintText: "Type a message",
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      filled: true,
+                      fillColor: Colors.grey[200],
+                    ),
                   ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.send, color: Colors.blue),
+                  onPressed: sendMessage,
                 ),
               ],
             ),
-            if (_showAttachment) const MessageAttachment(),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class MessageAttachment extends StatelessWidget {
-  const MessageAttachment({
-    super.key,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      // color: Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(0.08),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          MessageAttachmentCard(
-            iconData: Icons.insert_drive_file,
-            title: "Document",
-            press: () {},
-          ),
-          MessageAttachmentCard(
-            iconData: Icons.image,
-            title: "Gallary",
-            press: () {},
-          ),
-          MessageAttachmentCard(
-            iconData: Icons.headset,
-            title: "Audio",
-            press: () {},
-          ),
-          MessageAttachmentCard(
-            iconData: Icons.videocam,
-            title: "Video",
-            press: () {},
           ),
         ],
       ),
     );
   }
 }
-
-class MessageAttachmentCard extends StatelessWidget {
-  final VoidCallback press;
-  final IconData iconData;
-  final String title;
-
-  const MessageAttachmentCard(
-      {super.key,
-      required this.press,
-      required this.iconData,
-      required this.title});
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: press,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0 / 2),
-        child: Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(16.0 * 0.75),
-              decoration: const BoxDecoration(
-                color: Color(0xFF1471D3),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                iconData,
-                size: 20,
-                color: Theme.of(context).scaffoldBackgroundColor,
-              ),
-            ),
-            const SizedBox(height: 16.0 / 2),
-            Text(
-              title,
-              style: Theme.of(context).textTheme.bodySmall!.copyWith(
-                    color: Theme.of(context)
-                        .textTheme
-                        .bodyLarge!
-                        .color!
-                        .withOpacity(0.8),
-                  ),
-            )
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class Message extends StatelessWidget {
-  const Message({
-    super.key,
-    required this.message,
-  });
-
-  final ChatMessage message;
-
-  @override
-  Widget build(BuildContext context) {
-    Widget messageContaint(ChatMessage message) {
-      switch (message.messageType) {
-        case ChatMessageType.text:
-          return TextMessage(message: message);
-        case ChatMessageType.audio:
-          return AudioMessage(message: message);
-        case ChatMessageType.video:
-          return const VideoMessage();
-        default:
-          return const SizedBox();
-      }
-    }
-
-    return Padding(
-      padding: const EdgeInsets.only(top: 16.0),
-      child: Row(
-        mainAxisAlignment:
-            message.isSender ? MainAxisAlignment.end : MainAxisAlignment.start,
-        children: [
-          if (!message.isSender) ...[
-            const CircleAvatar(
-              radius: 12,
-              backgroundImage:
-                  NetworkImage("https://i.postimg.cc/cCsYDjvj/user-2.png"),
-            ),
-            const SizedBox(width: 16.0 / 2),
-          ],
-          messageContaint(message),
-          if (message.isSender) MessageStatusDot(status: message.messageStatus)
-        ],
-      ),
-    );
-  }
-}
-
-class VideoMessage extends StatelessWidget {
-  const VideoMessage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: MediaQuery.of(context).size.width * 0.45, // 45% of total width
-      child: AspectRatio(
-        aspectRatio: 1.6,
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: Image.network(
-                  "https://i.postimg.cc/Ls1WtygL/Video-Place-Here.png"),
-            ),
-            Container(
-              height: 25,
-              width: 25,
-              decoration: const BoxDecoration(
-                color: Color(0xFF1471D3),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.play_arrow,
-                size: 16,
-                color: Colors.white,
-              ),
-            )
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class AudioMessage extends StatelessWidget {
-  final ChatMessage? message;
-
-  const AudioMessage({super.key, this.message});
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: MediaQuery.of(context).size.width * 0.55,
-      padding: const EdgeInsets.symmetric(
-        horizontal: 16.0 * 0.75,
-        vertical: 16.0 / 2.5,
-      ),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(30),
-        color: const Color(0xFF1471D3).withOpacity(message!.isSender ? 1 : 0.1),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            Icons.play_arrow,
-            color: message!.isSender ? Colors.white : const Color(0xFF1471D3),
-          ),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0 / 2),
-              child: Stack(
-                clipBehavior: Clip.none,
-                alignment: Alignment.center,
-                children: [
-                  Container(
-                    width: double.infinity,
-                    height: 2,
-                    color: message!.isSender
-                        ? Colors.white
-                        : const Color(0xFF1471D3).withOpacity(0.4),
-                  ),
-                  Positioned(
-                    left: 0,
-                    child: Container(
-                      height: 8,
-                      width: 8,
-                      decoration: BoxDecoration(
-                        color: message!.isSender
-                            ? Colors.white
-                            : const Color(0xFF1471D3),
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                  )
-                ],
-              ),
-            ),
-          ),
-          Text(
-            "0.37",
-            style: TextStyle(
-                fontSize: 12, color: message!.isSender ? Colors.white : null),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class TextMessage extends StatelessWidget {
-  const TextMessage({
-    super.key,
-    this.message,
-  });
-
-  final ChatMessage? message;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 16.0 * 0.75,
-        vertical: 16.0 / 2,
-      ),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1471D3).withOpacity(message!.isSender ? 1 : 0.1),
-        borderRadius: BorderRadius.circular(30),
-      ),
-      child: Text(
-        message!.text,
-        style: TextStyle(
-          color: message!.isSender
-              ? Colors.white
-              : Theme.of(context).textTheme.bodyLarge!.color,
-        ),
-      ),
-    );
-  }
-}
-
-class MessageStatusDot extends StatelessWidget {
-  final MessageStatus? status;
-
-  const MessageStatusDot({super.key, this.status});
-  @override
-  Widget build(BuildContext context) {
-    Color dotColor(MessageStatus status) {
-      switch (status) {
-        case MessageStatus.notSent:
-          return const Color(0xFFF03738);
-        case MessageStatus.notView:
-          return Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(0.1);
-        case MessageStatus.viewed:
-          return const Color(0xFF00BF6D);
-        default:
-          return Colors.transparent;
-      }
-    }
-
-    return Container(
-      margin: const EdgeInsets.only(left: 16.0 / 2),
-      height: 12,
-      width: 12,
-      decoration: BoxDecoration(
-        color: dotColor(status!),
-        shape: BoxShape.circle,
-      ),
-      child: Icon(
-        status == MessageStatus.notSent ? Icons.close : Icons.done,
-        size: 8,
-        color: Theme.of(context).scaffoldBackgroundColor,
-      ),
-    );
-  }
-}
-
-enum ChatMessageType { text, audio, image, video }
-
-enum MessageStatus { notSent, notView, viewed }
-
-class ChatMessage {
-  final String text;
-  final ChatMessageType messageType;
-  final MessageStatus messageStatus;
-  final bool isSender;
-
-  ChatMessage({
-    this.text = '',
-    required this.messageType,
-    required this.messageStatus,
-    required this.isSender,
-  });
-}
-
-List demeChatMessages = [
-  ChatMessage(
-    text: "Hi Sajol,",
-    messageType: ChatMessageType.text,
-    messageStatus: MessageStatus.viewed,
-    isSender: false,
-  ),
-  ChatMessage(
-    text: "Hello, How are you?",
-    messageType: ChatMessageType.text,
-    messageStatus: MessageStatus.viewed,
-    isSender: true,
-  ),
-  ChatMessage(
-    text: "",
-    messageType: ChatMessageType.audio,
-    messageStatus: MessageStatus.viewed,
-    isSender: false,
-  ),
-  ChatMessage(
-    text: "",
-    messageType: ChatMessageType.video,
-    messageStatus: MessageStatus.viewed,
-    isSender: true,
-  ),
-  ChatMessage(
-    text: "Error happend",
-    messageType: ChatMessageType.text,
-    messageStatus: MessageStatus.notSent,
-    isSender: true,
-  ),
-  ChatMessage(
-    text: "This looks great man!!",
-    messageType: ChatMessageType.text,
-    messageStatus: MessageStatus.viewed,
-    isSender: false,
-  ),
-  ChatMessage(
-    text: "Glad you like it",
-    messageType: ChatMessageType.text,
-    messageStatus: MessageStatus.notView,
-    isSender: true,
-  ),
-];

@@ -1,7 +1,7 @@
-//chats
-
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:mad/pages/chatSearch.dart';
+import 'package:intl/intl.dart';
 import 'package:mad/pages/message.dart';
 
 class ChatsScreen extends StatelessWidget {
@@ -9,6 +9,8 @@ class ChatsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    String currentUserId = FirebaseAuth.instance.currentUser!.uid;
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -18,113 +20,120 @@ class ChatsScreen extends StatelessWidget {
         foregroundColor: Colors.white,
         automaticallyImplyLeading: false,
         title: const Text("Chats"),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.search),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const MessageSearchScreen()),
+      ),
+      body: StreamBuilder<QuerySnapshot>(
+        stream: FirebaseFirestore.instance.collection('Users').snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+            return const Center(child: Text("No users available"));
+          }
+
+          var users = snapshot.data!.docs.where((doc) => doc.id != currentUserId).toList();
+
+          return ListView.builder(
+            itemCount: users.length,
+            itemBuilder: (context, index) {
+              var user = users[index];
+              return FutureBuilder<String>(
+                future: _getLatestMessage(currentUserId, user.id),
+                builder: (context, messageSnapshot) {
+                  return ChatCard(
+                    name: user['name'],
+                    userId: user.id,
+                    lastMessage: messageSnapshot.data ?? "", // Display latest message
+                    press: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => MessagesScreen(receiverId: user.id, receiverName: user['name']),
+                        ),
+                      );
+                    },
+                  );
+                },
               );
             },
-          ),
-        ],
+          );
+        },
       ),
-      body: Column(
-        children: [
-          // Container(
-          //   padding: const EdgeInsets.fromLTRB(16.0, 0, 16.0, 16.0),
-          //   color: const Color(0xFF1471D3),
-          //   child: Row(
-          //     children: [
-          //       FillOutlineButton(press: () {}, text: "Recent Message"),
-          //       const SizedBox(width: 16.0),
-          //       FillOutlineButton(
-          //         press: () {},
-          //         text: "Active",
-          //         isFilled: false,
-          //       ),
-          //     ],
-          //   ),
-          // ),
-          Expanded(
-            child: ListView.builder(
-              itemCount: chatsData.length,
-              itemBuilder: (context, index) => ChatCard(
-                chat: chatsData[index],
-                press: () {},
-              ),
-            ),
-          ),
-        ],
-      ),
-      // floatingActionButton: FloatingActionButton(
-      //   onPressed: () {},
-      //   backgroundColor: const Color(0xFF1471D3),
-      //   child: const Icon(
-      //     Icons.person_add_alt_1,
-      //     color: Colors.white,
-      //   ),
-      // ),
     );
+  }
+
+  Future<String> _getLatestMessage(String currentUserId, String otherUserId) async {
+    try {
+      String chatRoomId = _generateChatRoomId(currentUserId, otherUserId);
+      QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+          .collection('chats')
+          .doc(chatRoomId)
+          .collection('messages')
+          .orderBy('timestamp', descending: true)
+          .limit(1)
+          .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        return querySnapshot.docs.first['text'];
+      } else {
+        return "";
+      }
+    } catch (e) {
+      print("Error fetching latest message: $e");
+      return "";
+    }
+  }
+
+  String _generateChatRoomId(String userId1, String userId2) {
+    List<String> sortedIds = [userId1, userId2]..sort();
+    return "${sortedIds[0]}_${sortedIds[1]}";
   }
 }
 
 class ChatCard extends StatelessWidget {
+  final String name;
+  final String userId;
+  final String lastMessage; // Added lastMessage
+  final VoidCallback press;
+
   const ChatCard({
     super.key,
-    required this.chat,
+    required this.name,
+    required this.userId,
+    required this.lastMessage, // Added lastMessage
     required this.press,
   });
-
-  final Chat chat;
-  final VoidCallback press;
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => MessagesScreen()),
-        );
-      },
+      onTap: press,
       child: Padding(
-        padding:
-            const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0 * 0.75),
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
         child: Row(
           children: [
-            CircleAvatarWithActiveIndicator(
-              image: chat.image,
-              isActive: chat.isActive,
+            CircleAvatar(
+              radius: 24,
+              backgroundImage: AssetImage('assets/profile.jpg'), // Dummy profile image
             ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      chat.name,
-                      style: const TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.w500),
-                    ),
-                    const SizedBox(height: 8),
-                    Opacity(
-                      opacity: 0.64,
-                      child: Text(
-                        chat.lastMessage,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
+            const SizedBox(width: 12),
+            Expanded( // Use Expanded to allow text wrapping
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    name,
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                  ),
+                  Text(
+                    lastMessage, // Display last message
+                    style: const TextStyle(fontSize: 14, color: Colors.grey),
+                    maxLines: 1, // Limit to one line
+                    overflow: TextOverflow.ellipsis, // Add ellipsis if too long
+                  ),
+                ],
               ),
-            ),
-            Opacity(
-              opacity: 0.64,
-              child: Text(chat.time),
             ),
           ],
         ),
@@ -132,148 +141,3 @@ class ChatCard extends StatelessWidget {
     );
   }
 }
-
-class FillOutlineButton extends StatelessWidget {
-  const FillOutlineButton({
-    super.key,
-    this.isFilled = true,
-    required this.press,
-    required this.text,
-  });
-
-  final bool isFilled;
-  final VoidCallback press;
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialButton(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(30),
-        side: const BorderSide(color: Colors.white),
-      ),
-      elevation: isFilled ? 2 : 0,
-      color: isFilled ? Colors.white : Colors.transparent,
-      onPressed: press,
-      child: Text(
-        text,
-        style: TextStyle(
-          color: isFilled ? const Color(0xFF1D1D35) : Colors.white,
-          fontSize: 12,
-        ),
-      ),
-    );
-  }
-}
-
-class CircleAvatarWithActiveIndicator extends StatelessWidget {
-  const CircleAvatarWithActiveIndicator({
-    super.key,
-    this.image,
-    this.radius = 24,
-    this.isActive,
-  });
-
-  final String? image;
-  final double? radius;
-  final bool? isActive;
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        CircleAvatar(
-          radius: radius,
-          backgroundImage: NetworkImage(image!),
-        ),
-        if (isActive!)
-          Positioned(
-            right: 0,
-            bottom: 0,
-            child: Container(
-              height: 16,
-              width: 16,
-              decoration: BoxDecoration(
-                color: const Color(0xFF1471D3),
-                shape: BoxShape.circle,
-                border: Border.all(
-                    color: Theme.of(context).scaffoldBackgroundColor, width: 3),
-              ),
-            ),
-          )
-      ],
-    );
-  }
-}
-
-class Chat {
-  final String name, lastMessage, image, time;
-  final bool isActive;
-
-  Chat({
-    this.name = '',
-    this.lastMessage = '',
-    this.image = '',
-    this.time = '',
-    this.isActive = false,
-  });
-}
-
-List chatsData = [
-  Chat(
-    name: "Jenny Wilson",
-    lastMessage: "Hope you are doing well...",
-    image: "https://i.postimg.cc/g25VYN7X/user-1.png",
-    time: "3m ago",
-    isActive: false,
-  ),
-  Chat(
-    name: "Esther Howard",
-    lastMessage: "Hello Abdullah! I am...",
-    image: "https://i.postimg.cc/cCsYDjvj/user-2.png",
-    time: "8m ago",
-    isActive: true,
-  ),
-  Chat(
-    name: "Ralph Edwards",
-    lastMessage: "Do you have update...",
-    image: "https://i.postimg.cc/sXC5W1s3/user-3.png",
-    time: "5d ago",
-    isActive: false,
-  ),
-  Chat(
-    name: "Jacob Jones",
-    lastMessage: "You’re welcome :)",
-    image: "https://i.postimg.cc/4dvVQZxV/user-4.png",
-    time: "5d ago",
-    isActive: true,
-  ),
-  Chat(
-    name: "Albert Flores",
-    lastMessage: "Thanks",
-    image: "https://i.postimg.cc/FzDSwZcK/user-5.png",
-    time: "6d ago",
-    isActive: false,
-  ),
-  Chat(
-    name: "Jenny Wilson",
-    lastMessage: "Hope you are doing well...",
-    image: "https://i.postimg.cc/g25VYN7X/user-1.png",
-    time: "3m ago",
-    isActive: false,
-  ),
-  Chat(
-    name: "Esther Howard",
-    lastMessage: "Hello Abdullah! I am...",
-    image: "https://i.postimg.cc/cCsYDjvj/user-2.png",
-    time: "8m ago",
-    isActive: true,
-  ),
-  Chat(
-    name: "Ralph Edwards",
-    lastMessage: "Do you have update...",
-    image: "https://i.postimg.cc/sXC5W1s3/user-3.png",
-    time: "5d ago",
-    isActive: false,
-  ),
-];
