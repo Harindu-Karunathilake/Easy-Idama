@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 class EditProfilePage extends StatefulWidget {
   const EditProfilePage({super.key});
@@ -10,28 +13,96 @@ class EditProfilePage extends StatefulWidget {
 }
 
 class _EditProfilePageState extends State<EditProfilePage> {
-  final TextEditingController _usernameController =
-      TextEditingController(text: 'Mathew Adam');
-  final TextEditingController _emailController =
-      TextEditingController(text: 'mathew@email.com');
-  final TextEditingController _phoneController =
-      TextEditingController(text: '0775896412');
+  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
 
-  File? _profileImage; // To store the selected image
+  File? _profileImage;
+  String? _profileImageUrl;
 
-  // Function to pick image from camera or gallery
-  Future<void> _pickImage(ImageSource source) async {
-    final ImagePicker picker = ImagePicker();
-    final XFile? pickedFile = await picker.pickImage(source: source);
+  void _getUserInfo() async {
+    User? user = FirebaseAuth.instance.currentUser;
 
-    if (pickedFile != null) {
-      setState(() {
-        _profileImage = File(pickedFile.path);
-      });
+    if (user != null) {
+      try {
+        DocumentSnapshot userDoc =
+            await FirebaseFirestore.instance.collection('Users').doc(user.uid).get();
+
+        if (userDoc.exists) {
+          setState(() {
+            _usernameController.text = userDoc['name'] ?? 'Unknown User';
+            _emailController.text = userDoc['email'] ?? 'Unknown Email';
+            _profileImageUrl = userDoc['profileImageUrl'];
+          });
+        }
+      } catch (e) {
+        print('Error fetching user data: $e');
+      }
     }
   }
 
-  // Show options to select camera or gallery
+ Future<void> _pickImage(ImageSource source) async {
+  final ImagePicker picker = ImagePicker();
+  final XFile? pickedFile = await picker.pickImage(source: source);
+
+  if (pickedFile != null) {
+    setState(() {
+      _profileImage = File(pickedFile.path);
+    });
+    await _uploadProfileImage();
+  } else {
+    print('No image selected');
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('No image selected')),
+    );
+  }
+}
+
+
+  Future<void> _uploadProfileImage() async {
+  User? user = FirebaseAuth.instance.currentUser;
+  if (user != null && _profileImage != null) {
+    try {
+      // Create a reference to Firebase Storage
+      Reference storageRef = FirebaseStorage.instance.ref().child('profile_pictures/${user.uid}.jpg');
+      
+      // Upload the image
+      UploadTask uploadTask = storageRef.putFile(_profileImage!);
+
+      // Wait for the upload to complete
+      TaskSnapshot snapshot = await uploadTask;
+
+      // Get the download URL of the uploaded image
+      String downloadUrl = await snapshot.ref.getDownloadURL();
+
+      // Update Firestore with the image URL
+      await FirebaseFirestore.instance.collection('Users').doc(user.uid).update({
+        'profileImageUrl': downloadUrl,
+      });
+
+      setState(() {
+        _profileImageUrl = downloadUrl;
+      });
+
+      // Show success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Profile picture uploaded successfully')),
+      );
+    } catch (e) {
+      print('Error uploading profile picture: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to upload profile picture: $e')),
+      );
+    }
+  } else {
+    print('No user or image selected');
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('No user or image selected')),
+    );
+  }
+}
+
+
+
   void _showImagePicker() {
     showModalBottomSheet(
       context: context,
@@ -64,6 +135,45 @@ class _EditProfilePageState extends State<EditProfilePage> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    _getUserInfo();
+  }
+
+  Widget _buildInputField({required String label, required TextEditingController controller, bool readOnly = false}) {
+    return TextField(
+      controller: controller,
+      readOnly: readOnly,
+      decoration: InputDecoration(
+        labelText: label,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
+      ),
+    );
+  }
+
+  void _updateProfile() async {
+    User? user = FirebaseAuth.instance.currentUser;
+
+    if (user != null) {
+      try {
+        await FirebaseFirestore.instance.collection('Users').doc(user.uid).update({
+          'name': _usernameController.text,
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Profile updated successfully')),
+        );
+      } catch (e) {
+        print('Error updating profile: $e');
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to update profile')),
+        );
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
@@ -91,7 +201,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       radius: 50,
                       backgroundImage: _profileImage != null
                           ? FileImage(_profileImage!) as ImageProvider
-                          : const AssetImage('assets/man.jpg'),
+                          : (_profileImageUrl != null
+                              ? NetworkImage(_profileImageUrl!)
+                              : const AssetImage('assets/man.jpg')) as ImageProvider,
                     ),
                     GestureDetector(
                       onTap: _showImagePicker,
@@ -107,36 +219,14 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 10),
-                const Text(
-                  'Mathew Adam',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                const Text(
-                  'mathew@email.com',
-                  style: TextStyle(color: Colors.blue),
-                ),
                 const SizedBox(height: 30),
-
-                // Editable Text Fields
-                _buildInputField(
-                    label: 'Username', controller: _usernameController),
+                _buildInputField(label: 'Username', controller: _usernameController),
                 const SizedBox(height: 15),
-                _buildInputField(label: 'Email', controller: _emailController),
-                const SizedBox(height: 15),
-                _buildInputField(
-                  label: 'Telephone number',
-                  controller: _phoneController,
-                  keyboardType: TextInputType.phone, // Enables number pad
-                ),
-                const SizedBox(
-                    height:
-                        100), // Extra space so button doesn’t overlap content
+                _buildInputField(label: 'Email', controller: _emailController, readOnly: true),
+                const SizedBox(height: 100),
               ],
             ),
           ),
-
-          // Positioned Update Button at Bottom
           Positioned(
             bottom: 20,
             left: 20,
@@ -162,41 +252,5 @@ class _EditProfilePageState extends State<EditProfilePage> {
         ],
       ),
     );
-  }
-
-  Widget _buildInputField({
-    required String label,
-    required TextEditingController controller,
-    TextInputType keyboardType = TextInputType.text, // Default to text input
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 5),
-        TextField(
-          controller: controller,
-          keyboardType: keyboardType, // Set keyboard type
-          decoration: InputDecoration(
-            filled: true,
-            fillColor: Colors.grey[200],
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: BorderSide.none,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  void _updateProfile() {
-    // Logic for updating profile goes here
-    print('Updated Username: ${_usernameController.text}');
-    print('Updated Email: ${_emailController.text}');
-    print('Updated Phone: ${_phoneController.text}');
   }
 }
