@@ -10,7 +10,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
-  
 
   @override
   State<ProfilePage> createState() => _ProfilePageState();
@@ -25,6 +24,8 @@ class _ProfilePageState extends State<ProfilePage> {
   int reviewsCount = 0;
   String userName = "User";
   String email = "Email";
+  String? profileImageUrl; // Add a variable for the profile image URL
+
   void _getUserInfo() async {
     User? user = FirebaseAuth.instance.currentUser;
 
@@ -37,6 +38,7 @@ class _ProfilePageState extends State<ProfilePage> {
           setState(() {
             userName = userDoc['name'] ?? 'Unknown User';
             email = userDoc['email'] ?? 'Unknown Email';
+            profileImageUrl = userDoc['profileImageUrl']; // Get profile image URL
           });
         } else {
           setState(() {
@@ -50,6 +52,12 @@ class _ProfilePageState extends State<ProfilePage> {
         });
       }
     }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _getUserInfo(); // Fetch user information when the page initializes
   }
 
   void _selectTab(String tab) {
@@ -68,12 +76,6 @@ class _ProfilePageState extends State<ProfilePage> {
       curve: Curves.easeInOut,
     );
   }
-
-@override
-void initState() {
-  super.initState();
-  _getUserInfo(); // Fetch user information when the page initializes
-}
 
   Widget _tabButton(String tabName) {
     bool isSelected = activeTab == tabName;
@@ -137,9 +139,11 @@ void initState() {
           children: [
             GestureDetector(
               onTap: _showProfilePicture,
-              child: const CircleAvatar(
+              child: CircleAvatar(
                 radius: 50,
-                backgroundImage: AssetImage('assets/profile.jpg'),
+                backgroundImage: profileImageUrl != null
+                    ? NetworkImage(profileImageUrl!) // Show the profile picture from Firestore
+                    : const AssetImage('assets/profile.jpg') as ImageProvider, // Default image if no profile pic
               ),
             ),
             const SizedBox(height: 10),
@@ -206,7 +210,9 @@ void initState() {
             child: InteractiveViewer(
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(10),
-                child: Image.asset('assets/man.jpg'),
+                child: profileImageUrl != null
+                    ? Image.network(profileImageUrl!) // Show profile picture in full screen
+                    : const Image(image: AssetImage('assets/profile.jpg')),
               ),
             ),
           ),
@@ -226,4 +232,4 @@ void initState() {
       ),
     );
   }
-} 
+}
