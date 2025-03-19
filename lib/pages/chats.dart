@@ -18,7 +18,7 @@ class ChatsScreen extends StatelessWidget {
         elevation: 0,
         backgroundColor: const Color(0xFF1471D3),
         foregroundColor: Colors.white,
-        automaticallyImplyLeading: false,
+        automaticallyImplyLeading: true, // Changed to true to show back button
         title: const Text("Chats"),
       ),
       body: StreamBuilder<QuerySnapshot>(

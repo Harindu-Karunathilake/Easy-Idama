@@ -73,60 +73,61 @@ class _MessagesScreenState extends State<MessagesScreen> {
       body: Column(
         children: [
           Expanded(
-            child: StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore.instance
-                  .collection('chats')
-                  .doc(chatRoomId)
-                  .collection('messages')
-                  .orderBy('timestamp', descending: false)
-                  .snapshots(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                  return const Center(child: Text("No messages yet"));
-                }
+            child:StreamBuilder<QuerySnapshot>(
+  stream: FirebaseFirestore.instance
+      .collection('chats')
+      .doc(chatRoomId)
+      .collection('messages')
+      .orderBy('timestamp', descending: false)
+      .snapshots(),
+  builder: (context, snapshot) {
+    if (snapshot.connectionState == ConnectionState.waiting) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+      return const Center(child: Text("No messages yet"));
+    }
 
-                WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+    WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom()); // Ensure scrolling
 
-                return ListView(
-                  controller: _scrollController,
-                  children: snapshot.data!.docs.map((doc) {
-                    Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-                    bool isSender = data['senderId'] == currentUserId;
-                    String time = data['timestamp'] != null
-                        ? DateFormat.jm().format((data['timestamp'] as Timestamp).toDate())
-                        : "Sending...";
+    return ListView(
+      controller: _scrollController,
+      children: snapshot.data!.docs.map((doc) {
+        Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+        bool isSender = data['senderId'] == currentUserId;
+        String time = data['timestamp'] != null
+            ? DateFormat.jm().format((data['timestamp'] as Timestamp).toDate())
+            : "Sending...";
 
-                    return Align(
-                      alignment: isSender ? Alignment.centerRight : Alignment.centerLeft,
-                      child: Container(
-                        margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: isSender ? Colors.blue : Colors.grey[300],
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: isSender ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              data['text'] ?? "",
-                              style: TextStyle(color: isSender ? Colors.white : Colors.black),
-                            ),
-                            Text(
-                              time,
-                              style: TextStyle(fontSize: 10, color: isSender ? Colors.white70 : Colors.black54),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                );
-              },
+        return Align(
+          alignment: isSender ? Alignment.centerRight : Alignment.centerLeft,
+          child: Container(
+            margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: isSender ? Colors.blue : Colors.grey[300],
+              borderRadius: BorderRadius.circular(12),
             ),
+            child: Column(
+              crossAxisAlignment: isSender ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+              children: [
+                Text(
+                  data['text'] ?? "",
+                  style: TextStyle(color: isSender ? Colors.white : Colors.black),
+                ),
+                Text(
+                  time,
+                  style: TextStyle(fontSize: 10, color: isSender ? Colors.white70 : Colors.black54),
+                ),
+              ],
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  },
+)
+
           ),
           Padding(
             padding: const EdgeInsets.all(8.0),
