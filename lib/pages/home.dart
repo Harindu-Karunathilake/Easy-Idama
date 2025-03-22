@@ -20,7 +20,7 @@ class HomePage extends StatelessWidget {
       case 1:
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const SearchPage()),
+          MaterialPageRoute(builder: (context) => SearchPage()),
         );
         break;
       case 2:

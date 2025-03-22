@@ -46,7 +46,7 @@ class CustomNavBar extends StatelessWidget {
           Navigator.pushReplacement(
             context,
             PageRouteBuilder(
-              pageBuilder: (context, animation, secondaryAnimation) => const SearchPage(),
+              pageBuilder: (context, animation, secondaryAnimation) =>  SearchPage(),
               transitionsBuilder: (context, animation, secondaryAnimation, child) {
                 const begin = Offset(0.5, 0.0);
                 const end = Offset.zero;
