@@ -7,7 +7,7 @@ import 'package:mad/models/Property_model.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:mad/pages/map.dart';
-
+import 'package:mad/pages/search.dart';
 class HeaderParts extends StatefulWidget {
   const HeaderParts({super.key});
 
@@ -167,11 +167,33 @@ class _HeaderPartsState extends State<HeaderParts> {
     );
                 },
               ),
-              const SizedBox(width: 8),
-              const CircleAvatar(
-                radius: 18,
-                backgroundImage: NetworkImage('https://i.postimg.cc/cCsYDjvj/user-2.pngg'),
-              ),
+                const SizedBox(width: 8),
+                GestureDetector(
+                onTap: () {
+                  showMenu(
+                  context: context,
+                  position: RelativeRect.fromLTRB(100, 80, 0, 0),
+                  items: [
+                    PopupMenuItem(
+  child: ListTile(
+    leading: Icon(Icons.logout),
+    title: Text('Logout'),
+    onTap: () async {
+      Navigator.pop(context); // Close the popup menu before logging out
+      await FirebaseAuth.instance.signOut();
+      Navigator.of(context).pushReplacementNamed('/signin'); 
+    },
+  ),
+),
+
+                  ],
+                  );
+                },
+                child: const CircleAvatar(
+                  radius: 18,
+                  backgroundImage: NetworkImage('https://i.postimg.cc/cCsYDjvj/user-2.pngg'),
+                ),
+                ),
             ],
           ),
         ],
@@ -187,20 +209,36 @@ class _HeaderPartsState extends State<HeaderParts> {
     );
   }
 
-  Widget _buildSearchBar() {
-    return Padding(
-      padding: EdgeInsets.all(16),
-      child: TextField(
-        controller: _searchController,
-        onChanged: _filterItems,
-        decoration: InputDecoration(
-          hintText: "Search properties...",
-          prefixIcon: Icon(Icons.search),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(30)),
+ Widget _buildSearchBar() {
+  return Padding(
+    padding: EdgeInsets.all(16),
+    child: GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => SearchPage()),
+        );
+      },
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 16),
+        height: 50,
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey),
+          borderRadius: BorderRadius.circular(30),
+          color: Colors.white,
+        ),
+        child: Row(
+          children: const [
+            Icon(Icons.search, color: Colors.grey),
+            SizedBox(width: 10),
+            Text("Search properties...", style: TextStyle(color: Colors.grey)),
+          ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
+
 
   Widget _buildCategorySelection() {
     List<String> categories = ["All", "Home", "Land", "Apartment"];
