@@ -156,7 +156,7 @@ class _AddListingPageState extends State<AddListingPage> {
               const Spacer(),
               ElevatedButton(
                 onPressed: _handleNextButton,
-                child: const Text('Next', style: TextStyle(color: Colors.white)),
+                child: const Text('Next', style: TextStyle(color: Colors.black)),
               ),
             ],
           ),
