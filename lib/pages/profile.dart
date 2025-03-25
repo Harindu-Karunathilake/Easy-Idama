@@ -8,6 +8,7 @@ import 'package:mad/pages/settings.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
 
@@ -19,32 +20,43 @@ class _ProfilePageState extends State<ProfilePage> {
   String activeTab = 'Transaction'; // Default active tab
   final ScrollController _scrollController = ScrollController();
   final List<String> tabs = ['Transaction', 'Listings', 'Sold', 'Reviews'];
-  int listingsCount = 0;
-  int soldCount = 0;
-  int reviewsCount = 0;
+
   String userName = "User";
   String email = "Email";
-  String? profileImageUrl; // Add a variable for the profile image URL
+  String? profileImageUrl; // Profile image URL
+  String userId = ""; // Logged-in user ID
+  List<Map<String, dynamic>> userListings = []; // Stores user's listings
 
+  @override
+  void initState() {
+    super.initState();
+    _getUserInfo(); // Fetch user details
+  }
+
+  // Fetch user info & listings
   void _getUserInfo() async {
     User? user = FirebaseAuth.instance.currentUser;
 
     if (user != null) {
+      setState(() {
+        userId = user.uid; // Store logged-in user ID
+      });
+
       try {
-        DocumentSnapshot userDoc =
-            await FirebaseFirestore.instance.collection('Users').doc(user.uid).get();
+        DocumentSnapshot userDoc = await FirebaseFirestore.instance
+            .collection('Users')
+            .doc(user.uid)
+            .get();
 
         if (userDoc.exists) {
           setState(() {
             userName = userDoc['name'] ?? 'Unknown User';
             email = userDoc['email'] ?? 'Unknown Email';
-            profileImageUrl = userDoc['profileImageUrl']; // Get profile image URL
-          });
-        } else {
-          setState(() {
-            userName = 'No Name Found';
+            profileImageUrl = userDoc['profileImageUrl'];
           });
         }
+
+        _fetchUserListings(); // Fetch listings after getting user info
       } catch (e) {
         print('Error fetching user data: $e');
         setState(() {
@@ -54,11 +66,40 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
-  @override
-  void initState() {
-    super.initState();
-    _getUserInfo(); // Fetch user information when the page initializes
+  // Fetch only the listings added by the logged-in user
+  void _fetchUserListings() async {
+  try {
+    // Get the current user ID from FirebaseAuth
+    User? user = FirebaseAuth.instance.currentUser;
+
+    if (user != null) {
+      String userId = user.uid;
+
+      // Query the Listings collection where the userId matches the current user's ID
+      QuerySnapshot snapshot = await FirebaseFirestore.instance
+          .collection('Listings')
+          .where('userId', isEqualTo: userId) // Filter by user ID
+          .orderBy('createdAt', descending: true) // Sort by newest first
+          .get();
+
+      // Check if the widget is still mounted before calling setState
+      if (mounted) {
+        setState(() {
+          userListings = snapshot.docs
+              .map((doc) => doc.data() as Map<String, dynamic>)
+              .toList();
+        });
+      }
+
+      print("✅ Fetched ${userListings.length} listings.");
+    } else {
+      print("❌ User not logged in");
+    }
+  } catch (e) {
+    print("❌ Error fetching user listings: $e");
   }
+}
+
 
   void _selectTab(String tab) {
     setState(() {
@@ -142,17 +183,19 @@ class _ProfilePageState extends State<ProfilePage> {
               child: CircleAvatar(
                 radius: 50,
                 backgroundImage: profileImageUrl != null
-                    ? NetworkImage(profileImageUrl!) // Show the profile picture from Firestore
-                    : const AssetImage('assets/profile.jpg') as ImageProvider, // Default image if no profile pic
+                    ? NetworkImage(profileImageUrl!)
+                    : const AssetImage('assets/profile.jpg') as ImageProvider,
               ),
             ),
             const SizedBox(height: 10),
             Text(
-              "$userName",
+              userName,
               style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
-            Text("$email", style: const TextStyle(color: Colors.grey)),
+            Text(email, style: const TextStyle(color: Colors.grey)),
             const SizedBox(height: 20),
+
+            // Tab Bar
             Container(
               decoration: BoxDecoration(
                 color: Colors.grey[50],
@@ -168,6 +211,8 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
             ),
             const SizedBox(height: 10),
+
+            // "Add Listing" Button
             if (activeTab == 'Listings')
               Align(
                 alignment: Alignment.centerRight,
@@ -178,9 +223,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       MaterialPageRoute(builder: (context) => const AddListingPage()),
                     );
                     if (newItemAdded == true) {
-                      setState(() {
-                        listingsCount++;
-                      });
+                      _fetchUserListings(); // Refresh the listings
                     }
                   },
                   mini: true,
@@ -188,9 +231,36 @@ class _ProfilePageState extends State<ProfilePage> {
                   backgroundColor: Colors.blue,
                 ),
               ),
+
             const SizedBox(height: 20),
+
+            // Display Listings or Empty Message
+          if (activeTab == 'Listings')
+  userListings.isNotEmpty
+      ? Column(
+          children: userListings.map((listing) {
+            return Card(
+              elevation: 2,
+              margin: const EdgeInsets.symmetric(vertical: 10),
+              child: ListTile(
+                leading: listing['imageUrls'] != null && (listing['imageUrls'] as List).isNotEmpty
+                    ? Image.network(
+                        listing['imageUrls'][0], // Access the first image in the list
+                        width: 50,
+                        height: 50,
+                        fit: BoxFit.cover,
+                      )
+                    : const Icon(Icons.image_not_supported),
+                title: Text(listing['name'] ?? 'No Title'),
+                subtitle: Text("Price: \$${listing['price'] ?? 'N/A'}"),
+              ),
+            );
+          }).toList(),
+        )
+      : _emptySection('No listings available'),
+
+
             if (activeTab == 'Transaction') _emptySection('No Transactions available'),
-            if (activeTab == 'Listings') _emptySection('No listings available'),
             if (activeTab == 'Sold') _emptySection('No sold items yet'),
             if (activeTab == 'Reviews') _emptySection('No reviews yet'),
           ],
@@ -207,14 +277,7 @@ class _ProfilePageState extends State<ProfilePage> {
           backgroundColor: Colors.transparent,
           child: GestureDetector(
             onTap: () => Navigator.pop(context),
-            child: InteractiveViewer(
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(10),
-                child: profileImageUrl != null
-                    ? Image.network(profileImageUrl!) // Show profile picture in full screen
-                    : const Image(image: AssetImage('assets/profile.jpg')),
-              ),
-            ),
+            child: Image.network(profileImageUrl ?? ''),
           ),
         );
       },
@@ -225,10 +288,7 @@ class _ProfilePageState extends State<ProfilePage> {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(20.0),
-        child: Text(
-          message,
-          style: const TextStyle(fontSize: 16, color: Colors.grey),
-        ),
+        child: Text(message, style: const TextStyle(fontSize: 16, color: Colors.grey)),
       ),
     );
   }

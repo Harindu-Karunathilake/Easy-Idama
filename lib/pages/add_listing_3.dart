@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:file_picker/file_picker.dart';
 import 'add_listing_4.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class AddListing3 extends StatefulWidget {
   const AddListing3({super.key});
@@ -32,11 +33,16 @@ class _AddListing3State extends State<AddListing3> {
   }
 
   Future<void> _pickAndUploadFile(bool isPlan) async {
-    FilePickerResult? result = await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ['pdf']);
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      type: FileType.custom, 
+      allowedExtensions: ['pdf'],
+    );
+    
     if (result != null) {
       File file = File(result.files.single.path!);
       String fileName = '${DateTime.now().millisecondsSinceEpoch}.pdf';
       String? downloadUrl = await _uploadFile(file, fileName);
+      
       if (downloadUrl != null) {
         setState(() {
           if (isPlan) {
@@ -49,30 +55,65 @@ class _AddListing3State extends State<AddListing3> {
     }
   }
 
-  void _handleNextButton() {
-    if (_priceController.text.isEmpty || propertyPlanUrl == null || propertyDeedUrl == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please complete all fields before proceeding.")),
+void _handleNextButton() async {
+  if (_priceController.text.isEmpty || propertyPlanUrl == null || propertyDeedUrl == null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Please complete all fields before proceeding.")),
+    );
+    return;
+  }
+
+  try {
+    // Get the latest listing document (assuming the previous step created one)
+    QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+        .collection("Listings")
+        .orderBy("createdAt", descending: true)
+        .limit(1)
+        .get();
+
+    if (querySnapshot.docs.isNotEmpty) {
+      String listingId = querySnapshot.docs.first.id;
+
+      // Update the Firestore document with uploaded file URLs
+      await FirebaseFirestore.instance.collection("Listings").doc(listingId).update({
+        "price": _priceController.text,
+        "currency": _selectedCurrency,
+        "propertyPlanUrl": propertyPlanUrl,
+        "propertyDeedUrl": propertyDeedUrl,
+      });
+
+      // Navigate to the next step
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const AddListing4()),
       );
-      return;
+    } else {
+      print("❌ No listing found to update.");
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("No listing found to update.")),
+      );
     }
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const AddListing4()),
+  } catch (e) {
+    print("❌ Firestore Update Error: $e");
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Error updating listing: $e")),
     );
   }
+}
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Add Listing - Step 3')),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Just one more step! Complete your listing.',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+            const Text(
+              'Just one more step! Complete your listing.',
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 20),
 
             // Sell Price Section
@@ -84,9 +125,14 @@ class _AddListing3State extends State<AddListing3> {
                   child: TextFormField(
                     controller: _priceController,
                     keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       hintText: 'Enter price',
-                      border: OutlineInputBorder(),
+                      border: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.blue), // Blue border
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.blue, width: 2), // Blue when focused
+                      ),
                     ),
                   ),
                 ),
@@ -112,20 +158,24 @@ class _AddListing3State extends State<AddListing3> {
             // Property Plan Section
             const Text('Add Property Plan', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             const SizedBox(height: 10),
-            ElevatedButton(
+            ElevatedButton.icon(
               onPressed: () => _pickAndUploadFile(true),
-              child: Text(propertyPlanUrl != null ? 'Uploaded' : 'Upload Property Plan'),
+              icon: const Icon(Icons.upload, color: Colors.white),
+              label: Text(propertyPlanUrl != null ? 'Uploaded' : 'Upload Property Plan'),
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
             ),
             const SizedBox(height: 20),
 
             // Property Deed Section
             const Text('Add Property Deed', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             const SizedBox(height: 10),
-            ElevatedButton(
+            ElevatedButton.icon(
               onPressed: () => _pickAndUploadFile(false),
-              child: Text(propertyDeedUrl != null ? 'Uploaded' : 'Upload Property Deed'),
+              icon: const Icon(Icons.upload, color: Colors.white),
+              label: Text(propertyDeedUrl != null ? 'Uploaded' : 'Upload Property Deed'),
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
             ),
-            const Spacer(),
+            const SizedBox(height: 20),
 
             // Next Button
             SizedBox(

@@ -33,7 +33,8 @@ class _AddListingPageState extends State<AddListingPage> {
   Future<String> _uploadImageToFirebase(XFile image) async {
     try {
       String fileName = DateTime.now().millisecondsSinceEpoch.toString();
-      Reference storageRef = FirebaseStorage.instance.ref().child('listings/$fileName');
+      Reference storageRef =
+          FirebaseStorage.instance.ref().child('listings/$fileName');
       UploadTask uploadTask = storageRef.putFile(File(image.path));
       TaskSnapshot snapshot = await uploadTask;
       return await snapshot.ref.getDownloadURL();
@@ -61,104 +62,184 @@ class _AddListingPageState extends State<AddListingPage> {
     });
   }
 
-  void _handleNextButton() async {
-    if (_formKey.currentState!.validate() && _imageFiles!.isNotEmpty) {
-      await _uploadAllImages();
+ void _handleNextButton() {
+  if (_formKey.currentState!.validate() && _imageFiles!.isNotEmpty) {
+    // Show loading indicator immediately
+    final snackBar = SnackBar(
+      content: Row(
+        children: [
+          const CircularProgressIndicator(),
+          const SizedBox(width: 20),
+          const Text('Uploading images...'),
+        ],
+      ),
+      duration: const Duration(days: 1), // Long duration to prevent auto-hiding
+    );
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+    
+    // Start upload in background
+    Future(() => _uploadAllImages()).then((_) {
+      // Hide loading indicator
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      // Navigate to next screen
       Navigator.push(
         context,
         MaterialPageRoute(builder: (context) => const AddListing2()),
       );
-    } else {
+    }).catchError((error) {
+      // Hide loading indicator and show error
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please complete all fields before proceeding.")),
+        SnackBar(content: Text('Upload failed: ${error.toString()}')),
       );
-    }
+    });
+  } else {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text("Please complete all fields before proceeding."),
+      ),
+    );
   }
-
+}
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Add Listing')),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text('Property Name', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              TextFormField(
-                controller: _nameController,
-                decoration: const InputDecoration(hintText: 'Enter property name'),
-                validator: (value) => value!.isEmpty ? 'Please enter a property name' : null,
-              ),
-              const SizedBox(height: 16),
-              const Text('Description', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              TextFormField(
-                controller: _descriptionController,
-                decoration: const InputDecoration(hintText: 'Enter property description'),
-                validator: (value) => value!.isEmpty ? 'Please enter a description' : null,
-                maxLines: 3,
-              ),
-              const SizedBox(height: 16),
-              const Text('Property Category', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Property Name',
+                    style:
+                        TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                TextFormField(
+  controller: _nameController,
+  decoration: InputDecoration(
+    hintText: 'Enter property name',
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(8.0),
+      borderSide: const BorderSide(color: Colors.blue), // Blue border
+    ),
+    enabledBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(8.0),
+      borderSide: const BorderSide(color: Colors.blue), // Blue when not focused
+    ),
+    focusedBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(8.0),
+      borderSide: const BorderSide(color: Colors.blue, width: 2.0), // Blue when focused
+    ),
+  ),
+  validator: (value) => value!.isEmpty ? 'Please enter a property name' : null,
+),
+const SizedBox(height: 16),
+const Text(
+  'Description',
+  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+),
+TextFormField(
+  controller: _descriptionController,
+  decoration: InputDecoration(
+    hintText: 'Enter property description',
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(8.0),
+      borderSide: const BorderSide(color: Colors.blue), // Blue border
+    ),
+    enabledBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(8.0),
+      borderSide: const BorderSide(color: Colors.blue), // Blue when not focused
+    ),
+    focusedBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(8.0),
+      borderSide: const BorderSide(color: Colors.blue, width: 2.0), // Blue when focused
+    ),
+  ),
+  validator: (value) => value!.isEmpty ? 'Please enter a description' : null,
+  maxLines: 3,
+),
+
+                const SizedBox(height: 16),
+                const Text('Property Category',
+                    style:
+                        TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               ListTile(
-                title: const Text('Land'),
-                leading: Radio<String>(
-                  value: 'Land',
-                  groupValue: _selectedCategory,
-                  onChanged: (String? value) {
-                    setState(() {
-                      _selectedCategory = value;
-                    });
-                  },
+  title: const Text('Land'),
+  leading: Radio<String>(
+    value: 'Land',
+    groupValue: _selectedCategory,
+    activeColor: Colors.blue, // Set radio color to blue
+    onChanged: (String? value) {
+      setState(() {
+        _selectedCategory = value;
+      });
+    },
+  ),
+),
+ListTile(
+  title: const Text('Apartment'),
+  leading: Radio<String>(
+    value: 'Apartment',
+    groupValue: _selectedCategory,
+    activeColor: Colors.blue, // Set radio color to blue
+    onChanged: (String? value) {
+      setState(() {
+        _selectedCategory = value;
+      });
+    },
+  ),
+),
+ListTile(
+  title: const Text('Home'),
+  leading: Radio<String>(
+    value: 'Home',
+    groupValue: _selectedCategory,
+    activeColor: Colors.blue, // Set radio color to blue
+    onChanged: (String? value) {
+      setState(() {
+        _selectedCategory = value;
+      });
+    },
+  ),
+),
+
+                const SizedBox(height: 20),
+                const Text('Add Images',
+                    style:
+                        TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                ElevatedButton(
+                  onPressed: _pickImages,
+                  child: const Text('Pick Images', style: TextStyle(color: Colors.blue),),
                 ),
-              ),
-              ListTile(
-                title: const Text('Apartment'),
-                leading: Radio<String>(
-                  value: 'Apartment',
-                  groupValue: _selectedCategory,
-                  onChanged: (String? value) {
-                    setState(() {
-                      _selectedCategory = value;
-                    });
-                  },
+                if (_imageFiles != null && _imageFiles!.isNotEmpty)
+                  Wrap(
+                    children: _imageFiles!.map((image) {
+                      return Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Image.file(File(image.path),
+                            width: 150, height: 150),
+                      );
+                    }).toList(),
+                  ),
+                const SizedBox(height: 20),
+                Center(
+                  child:  ElevatedButton(
+                  onPressed: _handleNextButton, // Show the success popup
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    textStyle: const TextStyle(fontSize: 18),
+                  ),
+                  child: const Text(
+                    'Next',
+                    style: TextStyle(color: Colors.white),
+                  ),
                 ),
-              ),
-              ListTile(
-                title: const Text('Home'),
-                leading: Radio<String>(
-                  value: 'Home',
-                  groupValue: _selectedCategory,
-                  onChanged: (String? value) {
-                    setState(() {
-                      _selectedCategory = value;
-                    });
-                  },
                 ),
-              ),
-              const SizedBox(height: 20),
-              const Text('Add Images', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              ElevatedButton(
-                onPressed: _pickImages,
-                child: const Text('Pick Images'),
-              ),
-              if (_imageFiles != null && _imageFiles!.isNotEmpty)
-                Wrap(
-                  children: _imageFiles!.map((image) {
-                    return Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Image.file(File(image.path), width: 150, height: 150),
-                    );
-                  }).toList(),
-                ),
-              const Spacer(),
-              ElevatedButton(
-                onPressed: _handleNextButton,
-                child: const Text('Next', style: TextStyle(color: Colors.black)),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
