@@ -28,6 +28,94 @@ class _AddListing4State extends State<AddListing4> {
     });
   }
 
+  // Function to show success modal bottom sheet
+  void _showSuccessPopup() {
+    showModalBottomSheet(
+      context: context,
+      isDismissible: false, // Prevents closing when tapping outside
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+      ),
+      builder: (context) {
+        return Container(
+          padding: const EdgeInsets.all(20),
+          height: 300,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Divider(
+                thickness: 3,
+                indent: 100,
+                endIndent: 100,
+                color: Colors.grey,
+              ),
+              const SizedBox(height: 10),
+              CircleAvatar(
+                radius: 30,
+                backgroundColor: Colors.blue,
+                child: Icon(Icons.check, size: 35, color: Colors.white),
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                "Your listing is now",
+                style: TextStyle(fontSize: 18),
+              ),
+              const Text(
+                "published",
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 10),
+              const Text(
+                "Your property is added to the profile",
+                style: TextStyle(fontSize: 14, color: Colors.grey),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(context); // Close popup
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.grey[200],
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 12),
+                    ),
+                    child: const Text(
+                      "Add More",
+                      style: TextStyle(color: Colors.black),
+                    ),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(context); // Close popup
+                      Navigator.pop(context); // Go back to previous screen
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 12),
+                    ),
+                    child: const Text(
+                      "Finish",
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -92,13 +180,7 @@ class _AddListing4State extends State<AddListing4> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () {
-                  // Navigate to AddListing5
-                  /*Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => ()),
-                  );*/
-                },
+                onPressed: _showSuccessPopup, // Show the success popup
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blue,
                   padding: const EdgeInsets.symmetric(vertical: 16),
