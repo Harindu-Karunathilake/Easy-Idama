@@ -8,6 +8,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:mad/pages/map.dart';
 import 'package:mad/pages/search.dart';
+//import 'package:mad/providers/property_provider.dart';
+import '../services/property_service.dart'; 
+
 class HeaderParts extends StatefulWidget {
   const HeaderParts({super.key});
 
@@ -17,44 +20,17 @@ class HeaderParts extends StatefulWidget {
 
 class _HeaderPartsState extends State<HeaderParts> {
   final TextEditingController _searchController = TextEditingController();
-  String selectedCategory = "Home";
+  String selectedCategory = "All";
   String userName = "User";
 
-  List<Map<String, String>> items = [
-    {
-      "name": "Beautiful Land in Kandy",
-      "location": "Kandy, Sri Lanka",
-      "image": 'assets/land.jpg',
-      "category": "Land"
-    },
-    {
-      "name": "Apartment in Colombo",
-      "location": "Colombo, Sri Lanka",
-      "image": 'assets/land.jpg',
-      "category": "Apartment"
-    },
-    {
-      "name": "Cozy Home in Galle",
-      "location": "Galle, Sri Lanka",
-      "image": 'assets/land.jpg',
-      "category": "Home"
-    },
-    {
-      "name": "Spacious Land in Jaffna",
-      "location": "Jaffna, Sri Lanka",
-      "image": 'assets/land.jpg',
-      "category": "Land"
-    },
-  ];
-
-  List<Map<String, String>> filteredItems = [];
+  List<Property> allProperties = [];
+  List<Property> filteredProperties = [];
 
   @override
   void initState() {
     super.initState();
     _getUserInfo();
-    filteredItems = items;
-    selectedCategory = "All";
+    _fetchProperties();
   }
 
   void _getUserInfo() async {
@@ -83,12 +59,20 @@ class _HeaderPartsState extends State<HeaderParts> {
     }
   }
 
+  void _fetchProperties() async {
+    List<Property> properties = await PropertyService().fetchProperties();
+    setState(() {
+      allProperties = properties;
+      filteredProperties = properties;  // Initially show all properties
+    });
+  }
+
   void _filterItems(String query) {
     setState(() {
-      filteredItems = items
-          .where((item) =>
-              item["name"]!.toLowerCase().contains(query.toLowerCase()) &&
-              (selectedCategory == "All" || item["category"] == selectedCategory))
+      filteredProperties = allProperties
+          .where((property) =>
+              property.name.toLowerCase().contains(query.toLowerCase()) &&
+              (selectedCategory == "All" || property.category == selectedCategory))
           .toList();
     });
   }
@@ -96,7 +80,7 @@ class _HeaderPartsState extends State<HeaderParts> {
   void _selectCategory(String category) {
     setState(() {
       selectedCategory = category;
-      _filterItems(_searchController.text);  // Re-filter based on the selected category
+      _filterItems(_searchController.text); // Re-filter based on the selected category
     });
   }
 
@@ -123,8 +107,6 @@ class _HeaderPartsState extends State<HeaderParts> {
     );
   }
 
-
-
   Widget _buildHeader(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10),
@@ -135,7 +117,7 @@ class _HeaderPartsState extends State<HeaderParts> {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => MapsScreen()), // Ensure MapsScreen is defined in maps.dart
+                MaterialPageRoute(builder: (context) => MapsScreen()),
               );
             },
             child: Container(
@@ -161,39 +143,38 @@ class _HeaderPartsState extends State<HeaderParts> {
               IconButton(
                 icon: const Icon(Icons.chat_bubble, color: Colors.black),
                 onPressed: () {
-                   Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => ChatsScreen()),
-    );
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => ChatsScreen()),
+                  );
                 },
               ),
-                const SizedBox(width: 8),
-                GestureDetector(
+              const SizedBox(width: 8),
+              GestureDetector(
                 onTap: () {
                   showMenu(
-                  context: context,
-                  position: RelativeRect.fromLTRB(100, 80, 0, 0),
-                  items: [
-                    PopupMenuItem(
-  child: ListTile(
-    leading: Icon(Icons.logout),
-    title: Text('Logout'),
-    onTap: () async {
-      Navigator.pop(context); // Close the popup menu before logging out
-      await FirebaseAuth.instance.signOut();
-      Navigator.of(context).pushReplacementNamed('/signin'); 
-    },
-  ),
-),
-
-                  ],
+                    context: context,
+                    position: RelativeRect.fromLTRB(100, 80, 0, 0),
+                    items: [
+                      PopupMenuItem(
+                        child: ListTile(
+                          leading: Icon(Icons.logout),
+                          title: Text('Logout'),
+                          onTap: () async {
+                            Navigator.pop(context); // Close the popup menu before logging out
+                            await FirebaseAuth.instance.signOut();
+                            Navigator.of(context).pushReplacementNamed('/signin');
+                          },
+                        ),
+                      ),
+                    ],
                   );
                 },
                 child: const CircleAvatar(
                   radius: 18,
                   backgroundImage: NetworkImage('https://i.postimg.cc/cCsYDjvj/user-2.pngg'),
                 ),
-                ),
+              ),
             ],
           ),
         ],
@@ -209,36 +190,35 @@ class _HeaderPartsState extends State<HeaderParts> {
     );
   }
 
- Widget _buildSearchBar() {
-  return Padding(
-    padding: EdgeInsets.all(16),
-    child: GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => SearchPage()),
-        );
-      },
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 16),
-        height: 50,
-        decoration: BoxDecoration(
-          border: Border.all(color: Colors.grey),
-          borderRadius: BorderRadius.circular(30),
-          color: Colors.white,
-        ),
-        child: Row(
-          children: const [
-            Icon(Icons.search, color: Colors.grey),
-            SizedBox(width: 10),
-            Text("Search properties...", style: TextStyle(color: Colors.grey)),
-          ],
+  Widget _buildSearchBar() {
+    return Padding(
+      padding: EdgeInsets.all(16),
+      child: GestureDetector(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => SearchPage()),
+          );
+        },
+        child: Container(
+          padding: EdgeInsets.symmetric(horizontal: 16),
+          height: 50,
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey),
+            borderRadius: BorderRadius.circular(30),
+            color: Colors.white,
+          ),
+          child: Row(
+            children: const [
+              Icon(Icons.search, color: Colors.grey),
+              SizedBox(width: 10),
+              Text("Search properties...", style: TextStyle(color: Colors.grey)),
+            ],
+          ),
         ),
       ),
-    ),
-  );
-}
-
+    );
+  }
 
   Widget _buildCategorySelection() {
     List<String> categories = ["All", "Home", "Land", "Apartment"];
@@ -287,7 +267,7 @@ class _HeaderPartsState extends State<HeaderParts> {
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
-              children: items.map((property) {
+              children: filteredProperties.map((property) {
                 return Container(
                   width: 250,
                   margin: EdgeInsets.only(right: 10, bottom: 10),
@@ -303,6 +283,7 @@ class _HeaderPartsState extends State<HeaderParts> {
 
   Widget _buildFilteredPropertyList() {
     bool isSearchOrCategoryActive = _searchController.text.isNotEmpty || selectedCategory != "All";
+
     return Padding(
       padding: EdgeInsets.all(16),
       child: Column(
@@ -315,9 +296,10 @@ class _HeaderPartsState extends State<HeaderParts> {
               ? ListView.builder(
                   shrinkWrap: true,
                   physics: NeverScrollableScrollPhysics(),
-                  itemCount: filteredItems.length,
+                  itemCount: filteredProperties.length,
                   itemBuilder: (context, index) {
-                    return _buildPropertyCard(filteredItems[index]);
+                    Property property = filteredProperties[index];
+                    return _buildPropertyCard(property);
                   },
                 )
               : Container(),
@@ -326,67 +308,54 @@ class _HeaderPartsState extends State<HeaderParts> {
     );
   }
 
-  Widget _buildPropertyCard(Map<String, String> property) {
-    return Consumer<FavoritesProvider>(
-      builder: (context, favoritesProvider, child) {
-        bool isFavorite = favoritesProvider.isFavorite(Property(
-          name: property["name"]!,
-          location: property["location"]!,
-          image: property["image"]!,
-          category: property["category"]!,
-        ));
+  Widget _buildPropertyCard(Property property) {
+    return Consumer<FavoritesProvider>(builder: (context, favoritesProvider, child) {
+      bool isFavorite = favoritesProvider.isFavorite(property);
 
-        return GestureDetector(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => LandDetailsScreen(property: property),
-              ),
-            );
-          },
-          child: Card(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-            child: Column(
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
-                  child: Image.asset(property["image"]!, height: 130, width:400, fit: BoxFit.cover),
-                ),
-                Padding(
-                  padding: EdgeInsets.all(10),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                        Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                          Text(property["name"]!, style: TextStyle(fontWeight: FontWeight.bold)),
-                          Text(property["location"]!, style: TextStyle(color: Colors.grey)),
-                          ],
-                        ),
-                        ),
-                      
-                      IconButton(
-                        icon: Icon(Icons.favorite, color: isFavorite ? Colors.red : Colors.grey),
-                        onPressed: () {
-                          favoritesProvider.toggleFavorite(Property(
-                            name: property["name"]!,
-                            location: property["location"]!,
-                            image: property["image"]!,
-                            category: property["category"]!,
-                          ));
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+      return GestureDetector(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => LandDetailsScreen(property: property),
             ),
+          );
+        },
+        child: Card(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          child: Column(
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
+                child: Image.network(property.imageUrls.first, height: 130, width: 400, fit: BoxFit.cover),
+              ),
+              Padding(
+                padding: EdgeInsets.all(10),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(property.name, style: TextStyle(fontWeight: FontWeight.bold)),
+                          Text(property.location, style: TextStyle(color: Colors.grey)),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.favorite, color: isFavorite ? Colors.red : Colors.grey),
+                      onPressed: () {
+                        favoritesProvider.toggleFavorite(property);
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-        );
-      },
-    );
+        ),
+      );
+    });
   }
 }

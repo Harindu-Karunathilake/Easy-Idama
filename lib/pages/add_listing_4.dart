@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:mad/pages/home.dart'; // Ensure this is correctly imported
+import 'package:mad/pages/home.dart';
 
 class AddListing4 extends StatefulWidget {
   const AddListing4({super.key});
@@ -14,7 +14,7 @@ class _AddListing4State extends State<AddListing4> {
   final TextEditingController _featureController = TextEditingController();
   List<String> _features = [];
 
-  // Function to add a new feature
+  // Add a new feature
   void _addFeature() {
     if (_featureController.text.isNotEmpty) {
       setState(() {
@@ -24,14 +24,14 @@ class _AddListing4State extends State<AddListing4> {
     }
   }
 
-  // Function to remove a feature
+  // Remove a feature
   void _removeFeature(int index) {
     setState(() {
       _features.removeAt(index);
     });
   }
 
-  // Function to store user ID in Firestore
+  // Store user ID and features array in Firestore
   Future<void> _storeUserIdInListing() async {
     try {
       User? user = FirebaseAuth.instance.currentUser;
@@ -56,12 +56,13 @@ class _AddListing4State extends State<AddListing4> {
       if (querySnapshot.docs.isNotEmpty) {
         String listingId = querySnapshot.docs.first.id;
 
-        // Update Firestore with userId
+        // Update Firestore with userId and features array
         await FirebaseFirestore.instance.collection("Listings").doc(listingId).update({
           "userId": user.uid,
+          "features": _features, // Store features as an array
         });
 
-        print("✅ User ID stored in listing successfully");
+        print("✅ User ID and Features stored successfully");
       } else {
         print("❌ No listing found to update.");
         if (mounted) {
@@ -80,9 +81,9 @@ class _AddListing4State extends State<AddListing4> {
     }
   }
 
-  // Function to show success modal bottom sheet
+  // Show success popup after storing data
   void _showSuccessPopup() async {
-    await _storeUserIdInListing(); // Ensure user ID is stored before showing the popup
+    await _storeUserIdInListing(); // Store user ID and features
 
     if (!mounted) return;
 
@@ -104,12 +105,7 @@ class _AddListing4State extends State<AddListing4> {
               mainAxisSize: MainAxisSize.min,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Divider(
-                  thickness: 3,
-                  indent: 100,
-                  endIndent: 100,
-                  color: Colors.grey,
-                ),
+                const Divider(thickness: 3, indent: 100, endIndent: 100, color: Colors.grey),
                 const SizedBox(height: 10),
                 const CircleAvatar(
                   radius: 30,
@@ -117,14 +113,8 @@ class _AddListing4State extends State<AddListing4> {
                   child: Icon(Icons.check, size: 35, color: Colors.white),
                 ),
                 const SizedBox(height: 20),
-                const Text(
-                  "Your listing is now",
-                  style: TextStyle(fontSize: 18),
-                ),
-                const Text(
-                  "published",
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-                ),
+                const Text("Your listing is now", style: TextStyle(fontSize: 18)),
+                const Text("published", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 10),
                 const Text(
                   "Your property is added to the profile",
@@ -136,18 +126,12 @@ class _AddListing4State extends State<AddListing4> {
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     ElevatedButton(
-                      onPressed: () {
-                        Navigator.pop(context); // Close popup
-                      },
+                      onPressed: () => Navigator.pop(context),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.grey[200],
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 20, vertical: 12),
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                       ),
-                      child: const Text(
-                        "Add More",
-                        style: TextStyle(color: Colors.black),
-                      ),
+                      child: const Text("Add More", style: TextStyle(color: Colors.black)),
                     ),
                     ElevatedButton(
                       onPressed: () {
@@ -159,13 +143,9 @@ class _AddListing4State extends State<AddListing4> {
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.blue,
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 20, vertical: 12),
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                       ),
-                      child: const Text(
-                        "Finish",
-                        style: TextStyle(color: Colors.white),
-                      ),
+                      child: const Text("Finish", style: TextStyle(color: Colors.white)),
                     ),
                   ],
                 ),
@@ -193,13 +173,9 @@ class _AddListing4State extends State<AddListing4> {
               ),
               const SizedBox(height: 20),
 
-              const Text(
-                'Property Features',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
+              const Text('Property Features', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
               const SizedBox(height: 10),
 
-              // Input field to add a new feature
               Row(
                 children: [
                   Expanded(

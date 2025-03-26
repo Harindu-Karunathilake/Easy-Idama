@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:mad/models/Property_model.dart';  // Ensure you import your Property model
 
 class LandDetailsScreen extends StatelessWidget {
-  final Map<String, String> property;
+  final Property property;
 
   const LandDetailsScreen({super.key, required this.property});
 
@@ -9,15 +10,15 @@ class LandDetailsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(property["name"]!),
+        title: Text(property.name),  // Use property.name
         backgroundColor: const Color(0xFF1471D3),
       ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Land Image
-          Image.asset(
-            property["image"]!,
+          Image.network(
+            property.imageUrls.isNotEmpty ? property.imageUrls.first : '', // Use network image
             width: double.infinity,
             height: 250,
             fit: BoxFit.cover,
@@ -32,7 +33,7 @@ class LandDetailsScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  property["name"]!,
+                  property.name,
                   style: const TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
@@ -40,7 +41,7 @@ class LandDetailsScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 5),
                 Text(
-                  "Date Added: ${property["dateAdded"] ?? "N/A"}",
+                  "Date Added: ${property.createdAt ?? 'N/A'}", // Use property.dateAdded
                   style: const TextStyle(
                     fontSize: 16,
                     color: Colors.grey,
@@ -56,7 +57,7 @@ class LandDetailsScreen extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: Text(
-              property["description"] ?? "No description available.",
+              property.description ?? "No description available.", // Use property.description
               style: const TextStyle(fontSize: 16),
             ),
           ),
