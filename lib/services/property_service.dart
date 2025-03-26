@@ -1,8 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import '../models/Property_model.dart';
 
 class PropertyService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseStorage _storage = FirebaseStorage.instance;
   final CollectionReference _propertiesRef = FirebaseFirestore.instance.collection('Listings');
 
   // Fetch all properties from Firestore
@@ -61,14 +63,52 @@ class PropertyService {
     }
   }
 
-  // Delete a property from Firestore
-  Future<bool> deleteProperty(String propertyId) async {
+  // Delete a property and its images from Firestore & Firebase Storage
+   Future<void> deleteProperty(String docId) async {
     try {
-      await _propertiesRef.doc(propertyId).delete();
-      return true;
+      DocumentSnapshot docSnapshot = await _propertiesRef.doc(docId).get();
+
+      if (docSnapshot.exists) {
+        Map<String, dynamic>? data = docSnapshot.data() as Map<String, dynamic>?;
+
+        if (data != null) {
+          // Delete property images
+          if (data.containsKey('imageUrls')) {
+            List<dynamic> imageUrls = data['imageUrls'];
+            for (String imageUrl in imageUrls) {
+              await _deleteFileFromStorage(imageUrl);
+            }
+          }
+
+          // Delete property deed document
+          if (data.containsKey('propertyDeedUrl')) {
+            await _deleteFileFromStorage(data['propertyDeedUrl']);
+          }
+
+          // Delete property plan document
+          if (data.containsKey('propertyPlanUrl')) {
+            await _deleteFileFromStorage(data['propertyPlanUrl']);
+          }
+        }
+      }
+
+      // Delete the Firestore document
+      await _propertiesRef.doc(docId).delete();
+      print("✅ Property deleted successfully!");
     } catch (e) {
       print("❌ Error deleting property: $e");
-      return false;
     }
   }
+
+  // Helper function to delete files from Firebase Storage
+  Future<void> _deleteFileFromStorage(String fileUrl) async {
+    try {
+      Reference ref = _storage.refFromURL(fileUrl);
+      await ref.delete();
+      print("✅ Deleted file: $fileUrl");
+    } catch (e) {
+      print("❌ Error deleting file: $e");
+    }
+  }
+
 }

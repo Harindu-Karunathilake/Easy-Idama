@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:mad/models/Property_model.dart';
+import 'package:mad/services/property_service.dart';
 
 class PropertyManagementPage extends StatefulWidget {
   @override
@@ -7,99 +8,31 @@ class PropertyManagementPage extends StatefulWidget {
 }
 
 class _PropertyManagementPageState extends State<PropertyManagementPage> {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final PropertyService _propertyService = PropertyService();
   TextEditingController searchController = TextEditingController();
   String searchQuery = "";
 
-  Stream<QuerySnapshot> _getProperties() {
-    return _firestore.collection('properties').snapshots();
-  }
-
-  void _deleteProperty(String docId) {
-    _firestore.collection('properties').doc(docId).delete();
-  }
-
-  void _editProperty(String docId, Map<String, dynamic> propertyData) {
-    TextEditingController titleController = TextEditingController(text: propertyData['title']);
-    TextEditingController locationController = TextEditingController(text: propertyData['location']);
-    TextEditingController priceController = TextEditingController(text: propertyData['price']);
-    
+  // Function to show a confirmation dialog before deleting
+  void _confirmDelete(String propertyId) {
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text("Edit Property"),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(controller: titleController, decoration: InputDecoration(labelText: "Title")),
-              TextField(controller: locationController, decoration: InputDecoration(labelText: "Location")),
-              TextField(
-                controller: priceController,
-                decoration: InputDecoration(labelText: "Price"),
-                keyboardType: TextInputType.number,
-              ),
-            ],
-          ),
+          title: Text("Delete Property"),
+          content: Text("Are you sure you want to delete this property?"),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: () => Navigator.pop(context), // Cancel
               child: Text("Cancel"),
             ),
             ElevatedButton(
-              onPressed: () {
-                _firestore.collection('properties').doc(docId).update({
-                  'title': titleController.text,
-                  'location': locationController.text,
-                  'price': priceController.text,
-                });
-                Navigator.pop(context);
+              onPressed: () async {
+                Navigator.pop(context); // Close dialog
+                await _propertyService.deleteProperty(propertyId);
+                setState(() {}); // Refresh UI after delete
               },
-              child: Text("Update"),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _addProperty() {
-    TextEditingController titleController = TextEditingController();
-    TextEditingController locationController = TextEditingController();
-    TextEditingController priceController = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text("Add New Property"),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(controller: titleController, decoration: InputDecoration(labelText: "Title")),
-              TextField(controller: locationController, decoration: InputDecoration(labelText: "Location")),
-              TextField(
-                controller: priceController,
-                decoration: InputDecoration(labelText: "Price"),
-                keyboardType: TextInputType.number,
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text("Cancel"),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                _firestore.collection('properties').add({
-                  'title': titleController.text,
-                  'location': locationController.text,
-                  'price': priceController.text,
-                });
-                Navigator.pop(context);
-              },
-              child: Text("Add"),
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              child: Text("Delete"),
             ),
           ],
         );
@@ -113,6 +46,7 @@ class _PropertyManagementPageState extends State<PropertyManagementPage> {
       appBar: AppBar(title: Text('Property Management')),
       body: Column(
         children: [
+          // Search Bar
           Padding(
             padding: const EdgeInsets.all(10.0),
             child: TextField(
@@ -129,41 +63,33 @@ class _PropertyManagementPageState extends State<PropertyManagementPage> {
               },
             ),
           ),
+
+          // Property List
           Expanded(
-            child: StreamBuilder<QuerySnapshot>(
-              stream: _getProperties(),
+            child: StreamBuilder<List<Property>>(
+              stream: Stream.fromFuture(_propertyService.fetchProperties()),
               builder: (context, snapshot) {
                 if (!snapshot.hasData) {
                   return Center(child: CircularProgressIndicator());
                 }
-                var properties = snapshot.data!.docs.where((doc) {
-                  var data = doc.data() as Map<String, dynamic>;
-                  return data['title'].toLowerCase().contains(searchQuery.toLowerCase()) ||
-                         data['location'].toLowerCase().contains(searchQuery.toLowerCase());
+
+                var properties = snapshot.data!.where((property) {
+                  return property.name.toLowerCase().contains(searchQuery.toLowerCase()) ||
+                         property.location.toLowerCase().contains(searchQuery.toLowerCase());
                 }).toList();
-                
+
                 return ListView.builder(
                   itemCount: properties.length,
                   itemBuilder: (context, index) {
-                    var property = properties[index].data() as Map<String, dynamic>;
-                    String docId = properties[index].id;
+                    var property = properties[index];
                     return Card(
                       margin: EdgeInsets.all(10),
                       child: ListTile(
-                        title: Text(property['title']),
-                        subtitle: Text("Location: \${property['location']}\nPrice: \${property['price']}"),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(
-                              icon: Icon(Icons.edit, color: Colors.blue),
-                              onPressed: () => _editProperty(docId, property),
-                            ),
-                            IconButton(
-                              icon: Icon(Icons.delete, color: Colors.red),
-                              onPressed: () => _deleteProperty(docId),
-                            ),
-                          ],
+                        title: Text(property.name),
+                        subtitle: Text("Location: ${property.location}\nPrice: ${property.price}"),
+                        trailing: IconButton(
+                          icon: Icon(Icons.delete, color: Colors.red),
+                          onPressed: () => _confirmDelete(property.id), // Show confirmation dialog
                         ),
                       ),
                     );
@@ -173,10 +99,6 @@ class _PropertyManagementPageState extends State<PropertyManagementPage> {
             ),
           ),
         ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _addProperty,
-        child: Icon(Icons.add),
       ),
     );
   }

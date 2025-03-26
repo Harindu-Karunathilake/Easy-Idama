@@ -54,10 +54,9 @@ class PropertyProvider extends ChangeNotifier {
 
   // Delete property
   Future<void> deleteProperty(String propertyId) async {
-    bool success = await _propertyService.deleteProperty(propertyId);
-    if (success) {
-      _properties.removeWhere((property) => property.id == propertyId);
-      notifyListeners();
-    }
-  }
+  await _propertyService.deleteProperty(propertyId); // Don't assign to a variable
+  _properties.removeWhere((property) => property.id == propertyId);
+  notifyListeners();
+}
+
 }
