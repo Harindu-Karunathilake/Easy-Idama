@@ -7,6 +7,7 @@ import 'package:mad/pages/edit_profile.dart';
 import 'package:mad/pages/settings.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:mad/services/property_service.dart';
 
 
 class ProfilePage extends StatefulWidget {
@@ -20,6 +21,7 @@ class _ProfilePageState extends State<ProfilePage> {
   String activeTab = 'Transaction'; // Default active tab
   final ScrollController _scrollController = ScrollController();
   final List<String> tabs = ['Transaction', 'Listings', 'Sold', 'Reviews'];
+  final PropertyService _propertyService = PropertyService();
 
   String userName = "User";
   String email = "Email";
@@ -32,6 +34,36 @@ class _ProfilePageState extends State<ProfilePage> {
     super.initState();
     _getUserInfo(); // Fetch user details
   }
+
+  // Show confirmation dialog for deleting the listing
+void _confirmDelete(String propertyId) {
+  showDialog(
+    context: context,
+    builder: (context) {
+      return AlertDialog(
+        title: Text("Delete Property"),
+        content: Text("Are you sure you want to delete this property?"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context), // Cancel
+            child: Text("Cancel"),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(context); // Close dialog
+              await _propertyService.deleteProperty(propertyId); // Delete property by ID
+              setState(() {
+                _fetchUserListings(); // Refresh listings after deletion
+              });
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: Text("Delete"),
+          ),
+        ],
+      );
+    },
+  );
+}
 
   // Fetch user info & listings
   void _getUserInfo() async {
@@ -67,7 +99,7 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   // Fetch only the listings added by the logged-in user
-  void _fetchUserListings() async {
+ void _fetchUserListings() async {
   try {
     // Get the current user ID from FirebaseAuth
     User? user = FirebaseAuth.instance.currentUser;
@@ -86,7 +118,10 @@ class _ProfilePageState extends State<ProfilePage> {
       if (mounted) {
         setState(() {
           userListings = snapshot.docs
-              .map((doc) => doc.data() as Map<String, dynamic>)
+              .map((doc) => {
+                    ...doc.data() as Map<String, dynamic>, // Convert the document data to a map
+                    'id': doc.id, // Add the document ID as 'id'
+                  })
               .toList();
         });
       }
@@ -253,6 +288,23 @@ class _ProfilePageState extends State<ProfilePage> {
                     : const Icon(Icons.image_not_supported),
                 title: Text(listing['name'] ?? 'No Title'),
                 subtitle: Text("Price: \$${listing['price'] ?? 'N/A'}"),
+
+                // Add delete button for each listing
+                trailing: IconButton(
+                  icon: const Icon(Icons.delete, color: Colors.red),
+                  onPressed: () {
+                    String? propertyId = listing['id'];
+                    if (propertyId != null && propertyId.isNotEmpty) {
+                      // Ensure propertyId is not null or empty before calling delete
+                      _confirmDelete(propertyId); // Pass the correct listing ID for deletion
+                    } else {
+                      // Show error if propertyId is invalid
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Invalid property ID')),
+                      );
+                    }
+                  },
+                ),
               ),
             );
           }).toList(),
