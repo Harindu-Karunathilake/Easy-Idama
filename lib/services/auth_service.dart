@@ -24,6 +24,7 @@ class AuthService {
           'email': email,
           'role': 'user', // Default role is "user"
           'createdAt': FieldValue.serverTimestamp(),
+          'status': 'active', // Default status is "active"
         });
 
         print("User registered and data stored in Firestore!");
