@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:mad/widgets/navbar.dart';
 import 'package:mad/pages/add_listing.dart';
-import 'package:mad/pages/sold.dart';
-import 'package:mad/pages/reviews.dart';
+//import 'package:mad/pages/sold.dart';
+//import 'package:mad/pages/reviews.dart';
 import 'package:mad/pages/edit_profile.dart';
 import 'package:mad/pages/settings.dart';
 import 'package:firebase_auth/firebase_auth.dart';

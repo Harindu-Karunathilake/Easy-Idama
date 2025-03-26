@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:mad/providers/favourite_provider.dart';
-import 'package:mad/models/Property_model.dart';
+//import 'package:mad/models/Property_model.dart';
 import 'package:mad/pages/home.dart';
 import 'package:mad/widgets/navbar.dart'; // Adjust the path as necessary
 
@@ -29,7 +29,14 @@ class FavoritesScreen extends StatelessWidget {
               itemBuilder: (context, index) {
                 final property = favoriteProperties[index];
                 return ListTile(
-                  leading: Image.asset(property.image, width: 50, height: 50, fit: BoxFit.cover),
+                  leading: property.imageUrls.isNotEmpty
+                      ? Image.network(
+                          property.imageUrls[0], // Using Image.network to load the image from the URL
+                          width: 50,
+                          height: 50,
+                          fit: BoxFit.cover,
+                        )
+                      : Icon(Icons.image_not_supported, size: 50), // Placeholder icon if no image exists
                   title: Text(property.name),
                   subtitle: Text(property.location),
                   trailing: IconButton(
