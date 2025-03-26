@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mad/models/Property_model.dart';  // Ensure you import your Property model
+import 'package:mad/pages/message.dart';  // Import your MessagesScreen
 
 class LandDetailsScreen extends StatelessWidget {
   final Property property;
@@ -15,8 +16,9 @@ class LandDetailsScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-          title: Text(property.name,
-          style: TextStyle(color: Colors.white,),  // Use property.name
+        title: Text(
+          property.name,
+          style: const TextStyle(color: Colors.white),  // Use property.name
         ),
         backgroundColor: Colors.blue,
       ),
@@ -106,29 +108,66 @@ class LandDetailsScreen extends StatelessWidget {
                 ),
               ),
 
-            const SizedBox(height: 20), // Additional space before the button
+            const SizedBox(height: 20), // Additional space before the buttons
 
-            // Book Button
+            // Row with Book and Chat buttons
             Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    // Add your booking logic here
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF1471D3),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween, // Space out the buttons
+                children: [
+                  // Book Button
+                  SizedBox(
+                    width: 150,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        // Add your booking logic here
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF1471D3),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      child: const Text(
+                        "Book",
+                        style: TextStyle(fontSize: 18, color: Colors.white),
+                      ),
                     ),
                   ),
-                  child: const Text(
-                    "Book",
-                    style: TextStyle(fontSize: 18, color: Colors.white),
+                  
+                  // Chat Button with Icon
+                  SizedBox(
+                    width: 150,
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        // Navigate to the message screen with the user who uploaded the listing
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => MessagesScreen(
+                              receiverId: property.userId, // Pass the userId of the property uploader
+                              receiverName: property.name, // Pass the property name or the user's name
+                            ),
+                          ),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF1471D3),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      icon: const Icon(Icons.chat, color: Colors.white),
+                      label: const Text(
+                        "Chat",
+                        style: TextStyle(fontSize: 18, color: Colors.white),
+                      ),
+                    ),
                   ),
-                ),
+                ],
               ),
             ),
           ],
