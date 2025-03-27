@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mad/pages/verify.dart';
 import 'package:mad/widgets/navbar.dart';
 import 'package:mad/pages/add_listing.dart';
 //import 'package:mad/pages/sold.dart';
@@ -270,7 +271,7 @@ void _confirmDelete(String propertyId) {
             const SizedBox(height: 20),
 
             // Display Listings or Empty Message
-          if (activeTab == 'Listings')
+         if (activeTab == 'Listings')
   userListings.isNotEmpty
       ? Column(
           children: userListings.map((listing) {
@@ -289,22 +290,56 @@ void _confirmDelete(String propertyId) {
                 title: Text(listing['name'] ?? 'No Title'),
                 subtitle: Text("Price: \$${listing['price'] ?? 'N/A'}"),
 
-                // Add delete button for each listing
-                trailing: IconButton(
-                  icon: const Icon(Icons.delete, color: Colors.red),
-                  onPressed: () {
-                    String? propertyId = listing['id'];
-                    if (propertyId != null && propertyId.isNotEmpty) {
-                      // Ensure propertyId is not null or empty before calling delete
-                      _confirmDelete(propertyId); // Pass the correct listing ID for deletion
-                    } else {
-                      // Show error if propertyId is invalid
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Invalid property ID')),
-                      );
-                    }
-                  },
-                ),
+                // Buttons for actions
+               trailing: Row(
+  mainAxisSize: MainAxisSize.min,
+  children: [
+    // Verify Button (Green)
+    TextButton(
+      onPressed: () {
+      String? propertyId = listing['id'];
+      if (propertyId != null && propertyId.isNotEmpty) {
+        // Navigate to VerifyPage with listingId
+        Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => VerifyScreen(listingId: propertyId),
+        ),
+        );
+      } else {
+        // Show error if propertyId is invalid
+        ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Invalid property ID')),
+        );
+      }
+      },
+      style: TextButton.styleFrom(
+      backgroundColor: Colors.green,
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      ),
+      child: const Text(
+      'Verify',
+      style: TextStyle(color: Colors.white),
+      ),
+    ),
+
+    // Delete Button (Red)
+    IconButton(
+      icon: const Icon(Icons.delete, color: Colors.red),
+      onPressed: () {
+        String? propertyId = listing['id'];
+        if (propertyId != null && propertyId.isNotEmpty) {
+          _confirmDelete(propertyId);
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Invalid property ID')),
+          );
+        }
+      },
+    ),
+  ],
+),
+
               ),
             );
           }).toList(),
