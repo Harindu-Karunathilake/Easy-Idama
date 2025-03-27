@@ -1,0 +1,177 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_paypal_payment/flutter_paypal_payment.dart';
+
+class PayPalPaymentScreen extends StatefulWidget {
+  const PayPalPaymentScreen({Key? key}) : super(key: key);
+
+  @override
+  State<PayPalPaymentScreen> createState() => _PayPalPaymentScreenState();
+}
+
+class _PayPalPaymentScreenState extends State<PayPalPaymentScreen> {
+  String _result = '';
+  bool _isProcessing = false;
+
+  Future<void> _processPayment() async {
+    setState(() {
+      _isProcessing = true;
+      _result = '';
+    });
+
+    try {
+      const fixedAmount = '19.99';
+      const currency = 'USD';
+      const productName = 'Premium Subscription';
+
+      await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (BuildContext context) => PaypalCheckoutView(
+            sandboxMode: true,
+            clientId: "ATxPCSgmN2g1lMthbvUY0hi0w4zbqPaeqt_bYHDv0k2P7tkmihiSKhqRtabslhI8E-5rRaQO_S7lVcsx",
+            secretKey: "EL7BNl5fTGIOWUFG5gNjSNpjAr5QmdvpHoZqgm1Wb_-Mw02yIL46CKoMBgR657zyoXmSHvMrYr37mNTo",
+            transactions: [
+              {
+                "amount": {
+                  "total": fixedAmount,
+                  "currency": currency,
+                  "details": {
+                    "subtotal": fixedAmount,
+                    "shipping": '0',
+                    "shipping_discount": 0
+                  }
+                },
+                "description": "Payment for $productName",
+                "item_list": {
+                  "items": [
+                    {
+                      "name": productName,
+                      "quantity": 1,
+                      "price": fixedAmount,
+                      "currency": currency
+                    }
+                  ]
+                }
+              }
+            ],
+            note: "Thank you for your purchase!",
+            onSuccess: (Map params) {
+              setState(() {
+                _result = 'Payment successful! ID: ${params['paymentId']}';
+                _isProcessing = false;
+              });
+              Navigator.pop(context);
+            },
+            onError: (error) {
+              setState(() {
+                _result = 'Payment failed: $error';
+                _isProcessing = false;
+              });
+              Navigator.pop(context);
+            },
+            onCancel: () {
+              setState(() {
+                _result = 'Payment cancelled';
+                _isProcessing = false;
+              });
+              Navigator.pop(context);
+            },
+          ),
+        ),
+      );
+    } catch (e) {
+      setState(() {
+        _result = 'Error: $e';
+        _isProcessing = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Premium Service'),
+        centerTitle: true,
+      ),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Card(
+                elevation: 4,
+                child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Column(
+                    children: [
+                      const Text(
+                        'Verify your listing',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      const Text(
+                        '\$19.99 ',
+                        style: TextStyle(
+                          fontSize: 28,
+                          color: Colors.green,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 30),
+                        SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          backgroundColor: Colors.blue, // Set button color to blue
+                          ),
+                          onPressed: _isProcessing ? null : _processPayment,
+                          child: _isProcessing
+                            ? const CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            )
+                            : const Text(
+                              'Pay Now',
+                              style: TextStyle(
+                              fontSize: 18,
+                              color: Colors.white, // Set text color to white
+                              ),
+                            ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              if (_result.isNotEmpty)
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: _result.contains('successful') 
+                        ? Colors.green[50] 
+                        : Colors.red[50],
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    _result,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: _result.contains('successful') 
+                          ? Colors.green[800] 
+                          : Colors.red[800],
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
