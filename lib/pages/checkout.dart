@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mad/pages/payment.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -93,7 +94,7 @@ class CheckoutScreen extends StatelessWidget {
                     buildDocumentLinks(property),
 
                     const SizedBox(height: 16),
-                    buildProceedButton(context),
+                    buildProceedButton(context, property),
                   ],
                 ),
               );
@@ -238,13 +239,16 @@ class CheckoutScreen extends StatelessWidget {
   }
 
   // Button to proceed with payment
-  Widget buildProceedButton(BuildContext context) {
+  Widget buildProceedButton(BuildContext context, Property property) {
     return Center(
       child: ElevatedButton(
       onPressed: () {
-        ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Payment Process Initiated")),
-        );
+        Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => PayPalPaymentScreen( ), // Pass listingId and amount
+                    ),
+                  );
       },
       style: ElevatedButton.styleFrom(
         backgroundColor: Colors.blueAccent,
