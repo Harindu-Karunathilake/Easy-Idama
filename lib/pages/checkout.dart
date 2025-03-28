@@ -246,7 +246,7 @@ class CheckoutScreen extends StatelessWidget {
         Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => PayPalPaymentScreen( ), // Pass listingId and amount
+                      builder: (context) => PayPalPaymentScreen(listingId: listingId), // Pass listingId and amount
                     ),
                   );
       },
