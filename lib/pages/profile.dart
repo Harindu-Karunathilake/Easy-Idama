@@ -12,7 +12,8 @@ import 'package:mad/services/property_service.dart';
 
 
 class ProfilePage extends StatefulWidget {
-  const ProfilePage({super.key});
+  
+  const ProfilePage({super.key,});
 
   @override
   State<ProfilePage> createState() => _ProfilePageState();
@@ -23,6 +24,7 @@ class _ProfilePageState extends State<ProfilePage> {
   final ScrollController _scrollController = ScrollController();
   final List<String> tabs = ['Transaction', 'Listings', 'Sold', 'Reviews'];
   final PropertyService _propertyService = PropertyService();
+    String _verificationStatus = 'not_verified'; // Default state
 
   String userName = "User";
   String email = "Email";
@@ -33,8 +35,50 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   void initState() {
     super.initState();
-    _getUserInfo(); // Fetch user details
+    _getUserInfo();
+     // Fetch user details
+     _fetchVerificationStatus('defaultPropertyId'); // Fetch verification status with a placeholder propertyId
   }
+ Future<void> _fetchVerificationStatus(String propertyId) async {
+  try {
+    // Query the verifications collection for the specific propertyId
+    var querySnapshot = await FirebaseFirestore.instance
+        .collection('verifications')
+        .where('listingId', isEqualTo: propertyId)
+        .get();
+
+    if (querySnapshot.docs.isNotEmpty) {
+      // If the propertyId exists in the collection, retrieve the verification status
+      setState(() {
+        _verificationStatus = querySnapshot.docs.first['verifyStatus'] ?? 'not_verified';
+      });
+    } else {
+      // If the propertyId doesn't exist in the collection, assume not verified
+      setState(() {
+        _verificationStatus = 'not_verified';
+      });
+    }
+  } catch (e) {
+    print("Error fetching verification status: $e");
+  }
+}
+
+
+void _handleVerification(String propertyId) {
+  if (_verificationStatus == 'pending') {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Verification is already pending')),
+    );
+    return;
+  }
+
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (context) => VerifyScreen(listingId: propertyId), // Use propertyId here
+    ),
+  );
+}
 
   // Show confirmation dialog for deleting the listing
 void _confirmDelete(String propertyId) {
@@ -295,33 +339,34 @@ void _confirmDelete(String propertyId) {
   mainAxisSize: MainAxisSize.min,
   children: [
     // Verify Button (Green)
-    TextButton(
-      onPressed: () {
-      String? propertyId = listing['id'];
-      if (propertyId != null && propertyId.isNotEmpty) {
-        // Navigate to VerifyPage with listingId
-        Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => VerifyScreen(listingId: propertyId),
-        ),
-        );
-      } else {
-        // Show error if propertyId is invalid
-        ScaffoldMessenger.of(context).showSnackBar(
+  TextButton(
+  onPressed: () async {
+    String? propertyId = listing['id'];
+
+    if (propertyId != null && propertyId.isNotEmpty) {
+      // Fetch verification status for the propertyId
+      await _fetchVerificationStatus(propertyId); // Await the fetch process
+
+      // Use the handleVerification method
+      _handleVerification(propertyId); // Call the _handleVerification function to manage the verification flow
+    } else {
+      // Show error if propertyId is invalid
+      ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Invalid property ID')),
-        );
-      }
-      },
-      style: TextButton.styleFrom(
-      backgroundColor: Colors.green,
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      ),
-      child: const Text(
-      'Verify',
-      style: TextStyle(color: Colors.white),
-      ),
-    ),
+      );
+    }
+  },
+  style: TextButton.styleFrom(
+    backgroundColor: Colors.green,
+    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+  ),
+  child: const Text(
+    'Verify',
+    style: TextStyle(color: Colors.white),
+  ),
+),
+
+
 
     // Delete Button (Red)
     IconButton(
