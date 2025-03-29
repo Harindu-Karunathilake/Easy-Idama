@@ -308,54 +308,96 @@ class _HeaderPartsState extends State<HeaderParts> {
     );
   }
 
-  Widget _buildPropertyCard(Property property) {
-    return Consumer<FavoritesProvider>(builder: (context, favoritesProvider, child) {
-      bool isFavorite = favoritesProvider.isFavorite(property);
+Widget _buildPropertyCard(Property property) {
+  return Consumer<FavoritesProvider>(builder: (context, favoritesProvider, child) {
+    bool isFavorite = favoritesProvider.isFavorite(property);
 
-      return GestureDetector(
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => LandDetailsScreen(property: property),
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => LandDetailsScreen(property: property),
+          ),
+        );
+      },
+      child: FutureBuilder<QuerySnapshot>(
+        future: FirebaseFirestore.instance
+            .collection('verifications')
+            .where('listingId', isEqualTo: property.id) // Check for matching listingId
+            .get(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const CircularProgressIndicator(); // Show a loading indicator
+          }
+
+          if (snapshot.hasError) {
+            return Text('Error: ${snapshot.error}');
+          }
+
+          bool isVerified = false;
+
+          // Debugging: Check if the verification document exists and verify the status
+          if (snapshot.hasData && snapshot.data!.docs.isNotEmpty) {
+            var verificationData = snapshot.data!.docs.first.data() as Map<String, dynamic>;
+            print("Verification Data: $verificationData");
+
+            // Ensure that verifyStatus is "verified"
+            if (verificationData['verifyStatus'] == 'verified') {
+              isVerified = true;
+            }
+          } else {
+            print("No verification document found for this listing.");
+          }
+
+          return Card(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            child: Column(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
+                  child: Image.network(property.imageUrls.isNotEmpty ? property.imageUrls.first : '', 
+                      height: 130, width: 400, fit: BoxFit.cover),
+                ),
+                Padding(
+                  padding: EdgeInsets.all(10),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(property.name, style: TextStyle(fontWeight: FontWeight.bold)),
+                            Text(property.location, style: TextStyle(color: Colors.grey)),
+                          ],
+                        ),
+                      ),
+                      Row(
+                        children: [
+                          // If verified, show the checkmark
+                          if (isVerified)
+                            Icon(Icons.verified, color: Colors.green),
+                          IconButton(
+                            icon: Icon(Icons.favorite, color: isFavorite ? Colors.red : Colors.grey),
+                            onPressed: () {
+                              favoritesProvider.toggleFavorite(property);
+                            },
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           );
         },
-        child: Card(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-          child: Column(
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
-                child: Image.network(property.imageUrls.first, height: 130, width: 400, fit: BoxFit.cover),
-              ),
-              Padding(
-                padding: EdgeInsets.all(10),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(property.name, style: TextStyle(fontWeight: FontWeight.bold)),
-                          Text(property.location, style: TextStyle(color: Colors.grey)),
-                        ],
-                      ),
-                    ),
-                    IconButton(
-                      icon: Icon(Icons.favorite, color: isFavorite ? Colors.red : Colors.grey),
-                      onPressed: () {
-                        favoritesProvider.toggleFavorite(property);
-                      },
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    });
-  }
+      ),
+    );
+  });
+}
+
+
+
 }
