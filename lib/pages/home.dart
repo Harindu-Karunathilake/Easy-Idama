@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:mad/pages/head_parts.dart';
 import 'package:mad/widgets/navbar.dart';
-// Import HeaderParts
 import 'package:mad/pages/search.dart';
 import 'package:mad/pages/favorite.dart';
 import 'package:mad/pages/profile.dart';
 
 class HomePage extends StatelessWidget {
-  const HomePage({super.key});
+  final String? successMessage;
+  const HomePage({super.key, this.successMessage});
 
   void _onTabChange(BuildContext context, int index) {
     switch (index) {
@@ -26,7 +26,7 @@ class HomePage extends StatelessWidget {
       case 2:
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) =>  FavoritesScreen()),
+          MaterialPageRoute(builder: (context) => FavoritesScreen()),
         );
         break;
       case 3:
@@ -40,6 +40,19 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Show success message as a Snackbar if it's not null
+    if (successMessage != null) {
+      Future.delayed(Duration.zero, () {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(successMessage!),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      });
+    }
+
     return Scaffold(
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(0.0), // No appbar

@@ -14,6 +14,11 @@ class LandDetailsScreen extends StatelessWidget {
         ? _formatDate(property.createdAt.toDate()) 
         : 'N/A';
 
+    // Format the price (ensure it's a valid number)
+    String formattedPrice = property.price != null
+        ? '${double.tryParse(property.price!)?.toStringAsFixed(2) ?? 'Invalid price'}' // Add ₹ symbol and format price
+        : 'Price not available';
+
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -55,6 +60,15 @@ class LandDetailsScreen extends StatelessWidget {
                     style: const TextStyle(
                       fontSize: 16,
                       color: Colors.grey,
+                    ),
+                  ),
+                  const SizedBox(height: 5),
+                  Text(
+                    "Price: $formattedPrice", // Display the price
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.green,
                     ),
                   ),
                 ],
