@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mad/pages/admin/verifyListings.dart';
 import 'user_management.dart'; 
 import 'property_management.dart'; // Import the Property Management page
 
@@ -39,6 +40,16 @@ class AdminDashboard extends StatelessWidget {
                 );
               },
               child: Text('Manage Properties'),
+            ),
+             SizedBox(height: 10), // Add spacing
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => VerifyListingPage()), // Navigate to Property Management
+                );
+              },
+              child: Text('Verify Listings'),
             ),
           ],
         ),
