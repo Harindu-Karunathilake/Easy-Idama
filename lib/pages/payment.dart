@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_paypal_payment/flutter_paypal_payment.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:mad/pages/home.dart';
 
 class PayPalPaymentScreen extends StatefulWidget {
   final String listingId; // Pass listing ID when navigating to this screen
@@ -17,10 +18,12 @@ class _PayPalPaymentScreenState extends State<PayPalPaymentScreen> {
   bool _isProcessing = false;
 
   Future<void> _processPayment() async {
-    setState(() {
-      _isProcessing = true;
-      _result = '';
-    });
+    if (mounted) {
+      setState(() {
+        _isProcessing = true;
+        _result = '';
+      });
+    }
 
     try {
       const fixedAmount = '19.99';
@@ -58,48 +61,73 @@ class _PayPalPaymentScreenState extends State<PayPalPaymentScreen> {
               }
             ],
             note: "Thank you for your purchase!",
-            onSuccess: (Map params) async {
-              String userId = FirebaseAuth.instance.currentUser?.uid ?? "unknown_user";
-              
-              // Store payment details in Firestore
-              await FirebaseFirestore.instance.collection('verifications').add({
-                'userId': userId,
-                'listingId': widget.listingId,
-                'verifyStatus': 'pending',
-                'amount': 19.99,
-                'paymentId': params['paymentId'],
-                'timestamp': FieldValue.serverTimestamp(),
-              });
 
-              setState(() {
-                _result = 'Payment successful! ID: ${params['paymentId']}';
-                _isProcessing = false;
-              });
+          onSuccess: (Map params) async {
+  if (mounted) {
+    setState(() {
+      _isProcessing = true;
+    });
+  }
 
-              Navigator.pop(context);
-            },
+  String userId = FirebaseAuth.instance.currentUser?.uid ?? "unknown_user";
+
+  // Store payment details in Firestore
+  await FirebaseFirestore.instance.collection('verifications').add({
+    'userId': userId,
+    'listingId': widget.listingId,
+    'verifyStatus': 'pending',
+    'amount': 19.99,
+    'paymentId': params['paymentId'],
+    'timestamp': FieldValue.serverTimestamp(),
+  });
+
+  if (mounted) {
+    setState(() {
+      _isProcessing = false;
+    });
+  }
+
+  // ✅ Navigate to Home and pass success message
+  Navigator.pushReplacement(
+    context,
+    MaterialPageRoute(
+      builder: (context) => HomePage(successMessage: "✅ Payment successful!"),
+    ),
+  );
+},
+
+
+
+
             onError: (error) {
-              setState(() {
-                _result = 'Payment failed: $error';
-                _isProcessing = false;
-              });
+              if (mounted) {
+                setState(() {
+                  _result = 'Payment failed: $error';
+                  _isProcessing = false;
+                });
+              }
               Navigator.pop(context);
             },
+
             onCancel: () {
-              setState(() {
-                _result = 'Payment cancelled';
-                _isProcessing = false;
-              });
+              if (mounted) {
+                setState(() {
+                  _result = 'Payment cancelled';
+                  _isProcessing = false;
+                });
+              }
               Navigator.pop(context);
             },
           ),
         ),
       );
     } catch (e) {
-      setState(() {
-        _result = 'Error: $e';
-        _isProcessing = false;
-      });
+      if (mounted) {
+        setState(() {
+          _result = 'Error: $e';
+          _isProcessing = false;
+        });
+      }
     }
   }
 
