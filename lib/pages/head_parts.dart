@@ -328,7 +328,7 @@ Widget _buildPropertyCard(Property property) {
             .get(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const CircularProgressIndicator(); // Show a loading indicator
+            return const SizedBox(); // Return an empty container while waiting for data
           }
 
           if (snapshot.hasError) {
@@ -337,17 +337,14 @@ Widget _buildPropertyCard(Property property) {
 
           bool isVerified = false;
 
-          // Debugging: Check if the verification document exists and verify the status
+          // Check if the verification document exists and if it's verified
           if (snapshot.hasData && snapshot.data!.docs.isNotEmpty) {
             var verificationData = snapshot.data!.docs.first.data() as Map<String, dynamic>;
-            print("Verification Data: $verificationData");
 
             // Ensure that verifyStatus is "verified"
             if (verificationData['verifyStatus'] == 'verified') {
               isVerified = true;
             }
-          } else {
-            print("No verification document found for this listing.");
           }
 
           return Card(
@@ -356,8 +353,12 @@ Widget _buildPropertyCard(Property property) {
               children: [
                 ClipRRect(
                   borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
-                  child: Image.network(property.imageUrls.isNotEmpty ? property.imageUrls.first : '', 
-                      height: 130, width: 400, fit: BoxFit.cover),
+                  child: Image.network(
+                    property.imageUrls.isNotEmpty ? property.imageUrls.first : '',
+                    height: 130, 
+                    width: 400, 
+                    fit: BoxFit.cover
+                  ),
                 ),
                 Padding(
                   padding: EdgeInsets.all(10),
@@ -368,8 +369,14 @@ Widget _buildPropertyCard(Property property) {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(property.name, style: TextStyle(fontWeight: FontWeight.bold)),
-                            Text(property.location, style: TextStyle(color: Colors.grey)),
+                            Text(
+                              property.name,
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            Text(
+                              property.location,
+                              style: TextStyle(color: Colors.grey),
+                            ),
                           ],
                         ),
                       ),
@@ -377,9 +384,16 @@ Widget _buildPropertyCard(Property property) {
                         children: [
                           // If verified, show the checkmark
                           if (isVerified)
-                            Icon(Icons.verified, color: Colors.green),
+                            Icon(
+                              Icons.verified,
+                              color: Colors.green,
+                              size: 24,
+                            ),
                           IconButton(
-                            icon: Icon(Icons.favorite, color: isFavorite ? Colors.red : Colors.grey),
+                            icon: Icon(
+                              Icons.favorite,
+                              color: isFavorite ? Colors.red : Colors.grey,
+                            ),
                             onPressed: () {
                               favoritesProvider.toggleFavorite(property);
                             },
