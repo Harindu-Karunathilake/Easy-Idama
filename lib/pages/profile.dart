@@ -2,123 +2,101 @@ import 'package:flutter/material.dart';
 import 'package:mad/pages/verify.dart';
 import 'package:mad/widgets/navbar.dart';
 import 'package:mad/pages/add_listing.dart';
-//import 'package:mad/pages/sold.dart';
-//import 'package:mad/pages/reviews.dart';
 import 'package:mad/pages/edit_profile.dart';
 import 'package:mad/pages/settings.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:mad/services/property_service.dart';
 
-
 class ProfilePage extends StatefulWidget {
-  
-  const ProfilePage({super.key,});
+  const ProfilePage({super.key});
 
   @override
   State<ProfilePage> createState() => _ProfilePageState();
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  String activeTab = 'Transaction'; // Default active tab
+  // State variables
+  String activeTab = 'Transaction';
   final ScrollController _scrollController = ScrollController();
   final List<String> tabs = ['Transaction', 'Listings', 'Sold', 'Reviews'];
   final PropertyService _propertyService = PropertyService();
-    String _verificationStatus = 'not_verified'; // Default state
 
+  String _verificationStatus = 'not_verified';
   String userName = "User";
   String email = "Email";
-  String? profileImageUrl; // Profile image URL
-  String userId = ""; // Logged-in user ID
-  List<Map<String, dynamic>> userListings = []; // Stores user's listings
+  String? profileImageUrl;
+  String userId = "";
+  List<Map<String, dynamic>> userListings = [];
 
   @override
   void initState() {
     super.initState();
     _getUserInfo();
-     // Fetch user details
-     _fetchVerificationStatus('defaultPropertyId'); // Fetch verification status with a placeholder propertyId
+    _fetchVerificationStatus('defaultPropertyId');
   }
- Future<void> _fetchVerificationStatus(String propertyId) async {
+
+  // --- Firebase Methods ---
+
+ Future<String> _fetchVerificationStatus(String propertyId) async {
   try {
-    // Query the verifications collection for the specific propertyId
     var querySnapshot = await FirebaseFirestore.instance
         .collection('verifications')
         .where('listingId', isEqualTo: propertyId)
         .get();
 
     if (querySnapshot.docs.isNotEmpty) {
-      // If the propertyId exists in the collection, retrieve the verification status
-      setState(() {
-        _verificationStatus = querySnapshot.docs.first['verifyStatus'] ?? 'not_verified';
-      });
-    } else {
-      // If the propertyId doesn't exist in the collection, assume not verified
-      setState(() {
-        _verificationStatus = 'not_verified';
-      });
+      return querySnapshot.docs.first['verifyStatus'] ?? 'not_verified';
     }
+    return 'not_verified';
   } catch (e) {
     print("Error fetching verification status: $e");
+    return 'not_verified';
   }
 }
 
 
-void _handleVerification(String propertyId) {
-  if (_verificationStatus == 'pending') {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Verification is already pending')),
-    );
-    return;
+  Future<List<Map<String, dynamic>>> _getUserVerificationsWithListingNames() async {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      try {
+        QuerySnapshot verificationSnapshot = await FirebaseFirestore.instance
+            .collection('verifications')
+            .where('userId', isEqualTo: user.uid)
+            .get();
+
+        List<Map<String, dynamic>> enrichedVerifications = [];
+        for (var doc in verificationSnapshot.docs) {
+          Map<String, dynamic> verification = doc.data() as Map<String, dynamic>;
+          String listingId = verification['listingId'];
+
+          DocumentSnapshot listingSnapshot = await FirebaseFirestore.instance
+              .collection('Listings')
+              .doc(listingId)
+              .get();
+
+          verification['listingName'] = listingSnapshot.exists
+              ? listingSnapshot['name'] ?? 'Unnamed Property'
+              : 'Unknown Listing';
+
+          enrichedVerifications.add(verification);
+        }
+        return enrichedVerifications;
+      } catch (e) {
+        print("Error fetching enriched verifications: $e");
+        return [];
+      }
+    } else {
+      return [];
+    }
   }
 
-  Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (context) => VerifyScreen(listingId: propertyId), // Use propertyId here
-    ),
-  );
-}
-
-  // Show confirmation dialog for deleting the listing
-void _confirmDelete(String propertyId) {
-  showDialog(
-    context: context,
-    builder: (context) {
-      return AlertDialog(
-        title: Text("Delete Property"),
-        content: Text("Are you sure you want to delete this property?"),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context), // Cancel
-            child: Text("Cancel"),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              Navigator.pop(context); // Close dialog
-              await _propertyService.deleteProperty(propertyId); // Delete property by ID
-              setState(() {
-                _fetchUserListings(); // Refresh listings after deletion
-              });
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: Text("Delete"),
-          ),
-        ],
-      );
-    },
-  );
-}
-
-  // Fetch user info & listings
   void _getUserInfo() async {
     User? user = FirebaseAuth.instance.currentUser;
-
     if (user != null) {
       setState(() {
-        userId = user.uid; // Store logged-in user ID
+        userId = user.uid;
       });
-
       try {
         DocumentSnapshot userDoc = await FirebaseFirestore.instance
             .collection('Users')
@@ -132,8 +110,7 @@ void _confirmDelete(String propertyId) {
             profileImageUrl = userDoc['profileImageUrl'];
           });
         }
-
-        _fetchUserListings(); // Fetch listings after getting user info
+        _fetchUserListings();
       } catch (e) {
         print('Error fetching user data: $e');
         setState(() {
@@ -143,58 +120,105 @@ void _confirmDelete(String propertyId) {
     }
   }
 
-  // Fetch only the listings added by the logged-in user
- void _fetchUserListings() async {
-  try {
-    // Get the current user ID from FirebaseAuth
-    User? user = FirebaseAuth.instance.currentUser;
+  void _fetchUserListings() async {
+    try {
+      User? user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        QuerySnapshot snapshot = await FirebaseFirestore.instance
+            .collection('Listings')
+            .where('userId', isEqualTo: user.uid)
+            .orderBy('createdAt', descending: true)
+            .get();
 
-    if (user != null) {
-      String userId = user.uid;
-
-      // Query the Listings collection where the userId matches the current user's ID
-      QuerySnapshot snapshot = await FirebaseFirestore.instance
-          .collection('Listings')
-          .where('userId', isEqualTo: userId) // Filter by user ID
-          .orderBy('createdAt', descending: true) // Sort by newest first
-          .get();
-
-      // Check if the widget is still mounted before calling setState
-      if (mounted) {
-        setState(() {
-          userListings = snapshot.docs
-              .map((doc) => {
-                    ...doc.data() as Map<String, dynamic>, // Convert the document data to a map
-                    'id': doc.id, // Add the document ID as 'id'
-                  })
-              .toList();
-        });
+        if (mounted) {
+          setState(() {
+            userListings = snapshot.docs
+                .map((doc) => {
+                      ...doc.data() as Map<String, dynamic>,
+                      'id': doc.id,
+                    })
+                .toList();
+          });
+        }
       }
-
-      print("✅ Fetched ${userListings.length} listings.");
-    } else {
-      print("❌ User not logged in");
+    } catch (e) {
+      print("Error fetching user listings: $e");
     }
-  } catch (e) {
-    print("❌ Error fetching user listings: $e");
   }
-}
 
+  // --- UI Helper Methods ---
 
   void _selectTab(String tab) {
     setState(() {
       activeTab = tab;
     });
-
     int index = tabs.indexOf(tab);
     double screenWidth = MediaQuery.of(context).size.width;
     double tabWidth = 100;
     double scrollTo = (index * tabWidth) - (screenWidth / 2) + (tabWidth / 2);
-
     _scrollController.animateTo(
       scrollTo.clamp(0, _scrollController.position.maxScrollExtent),
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeInOut,
+    );
+  }
+
+  void _handleVerification(String propertyId) {
+    if (_verificationStatus == 'pending') {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Verification is already pending')),
+      );
+      return;
+    }
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => VerifyScreen(listingId: propertyId),
+      ),
+    );
+  }
+
+  void _confirmDelete(String propertyId) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Delete Property"),
+          content: const Text("Are you sure you want to delete this property?"),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Cancel"),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                Navigator.pop(context);
+                await _propertyService.deleteProperty(propertyId);
+                setState(() {
+                  _fetchUserListings();
+                });
+              },
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              child: const Text("Delete"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showProfilePicture() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          child: GestureDetector(
+            onTap: () => Navigator.pop(context),
+            child: Image.network(profileImageUrl ?? ''),
+          ),
+        );
+      },
     );
   }
 
@@ -220,6 +244,37 @@ void _confirmDelete(String propertyId) {
       ),
     );
   }
+
+  Widget _buildVerificationItemWithListingName(Map<String, dynamic> verification) {
+    String verifyStatus = verification['verifyStatus'] ?? 'pending';
+    String listingName = verification['listingName'] ?? 'Unnamed Property';
+
+    Icon statusIcon;
+    if (verifyStatus == 'verified') {
+      statusIcon = const Icon(Icons.verified, color: Colors.green);
+    } else if (verifyStatus == 'rejected') {
+      statusIcon = const Icon(Icons.cancel, color: Colors.red);
+    } else {
+      statusIcon = const Icon(Icons.hourglass_empty, color: Colors.orange);
+    }
+
+    return ListTile(
+      title: Text(listingName),
+      subtitle: Text('Status: $verifyStatus'),
+      trailing: statusIcon,
+    );
+  }
+
+  Widget _emptySection(String message) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Text(message, style: const TextStyle(fontSize: 16, color: Colors.grey)),
+      ),
+    );
+  }
+
+  // --- Build Method ---
 
   @override
   Widget build(BuildContext context) {
@@ -274,7 +329,6 @@ void _confirmDelete(String propertyId) {
             ),
             Text(email, style: const TextStyle(color: Colors.grey)),
             const SizedBox(height: 20),
-
             // Tab Bar
             Container(
               decoration: BoxDecoration(
@@ -291,136 +345,146 @@ void _confirmDelete(String propertyId) {
               ),
             ),
             const SizedBox(height: 10),
-
-            // "Add Listing" Button
-            if (activeTab == 'Listings')
-              Align(
-                alignment: Alignment.centerRight,
-                child: FloatingActionButton(
-                  onPressed: () async {
-                    final newItemAdded = await Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => const AddListingPage()),
-                    );
-                    if (newItemAdded == true) {
-                      _fetchUserListings(); // Refresh the listings
-                    }
-                  },
-                  mini: true,
-                  child: const Icon(Icons.add, size: 20),
-                  backgroundColor: Colors.blue,
-                ),
-              ),
-
-            const SizedBox(height: 20),
-
-            // Display Listings or Empty Message
-         if (activeTab == 'Listings')
+            // Add Listing Button
+           if (activeTab == 'Listings')
+  Align(
+    alignment: Alignment.centerRight,
+    child: FloatingActionButton(
+      onPressed: () async {
+        final newItemAdded = await Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const AddListingPage()),
+        );
+        if (newItemAdded == true) {
+          _fetchUserListings();
+        }
+      },
+      mini: true,
+      child: const Icon(Icons.add, size: 20),
+      backgroundColor: Colors.blue,
+    ),
+  ),
+const SizedBox(height: 20),
+// Tab Content
+if (activeTab == 'Listings')
   userListings.isNotEmpty
       ? Column(
           children: userListings.map((listing) {
-            return Card(
-              elevation: 2,
-              margin: const EdgeInsets.symmetric(vertical: 10),
-              child: ListTile(
-                leading: listing['imageUrls'] != null && (listing['imageUrls'] as List).isNotEmpty
-                    ? Image.network(
-                        listing['imageUrls'][0], // Access the first image in the list
-                        width: 50,
-                        height: 50,
-                        fit: BoxFit.cover,
-                      )
-                    : const Icon(Icons.image_not_supported),
-                title: Text(listing['name'] ?? 'No Title'),
-                subtitle: Text("Price: \$${listing['price'] ?? 'N/A'}"),
+            return FutureBuilder(
+              future: _fetchVerificationStatus(listing['id']),
+              builder: (context, snapshot) {
+                // Default status if loading or error occurs
+                String verifyStatus = snapshot.data ?? 'not_verified';
 
-                // Buttons for actions
-               trailing: Row(
-  mainAxisSize: MainAxisSize.min,
-  children: [
-    // Verify Button (Green)
-  TextButton(
-  onPressed: () async {
-    String? propertyId = listing['id'];
-
-    if (propertyId != null && propertyId.isNotEmpty) {
-      // Fetch verification status for the propertyId
-      await _fetchVerificationStatus(propertyId); // Await the fetch process
-
-      // Use the handleVerification method
-      _handleVerification(propertyId); // Call the _handleVerification function to manage the verification flow
-    } else {
-      // Show error if propertyId is invalid
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Invalid property ID')),
-      );
-    }
-  },
-  style: TextButton.styleFrom(
-    backgroundColor: Colors.green,
-    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-  ),
-  child: const Text(
-    'Verify',
-    style: TextStyle(color: Colors.white),
-  ),
-),
-
-
-
-    // Delete Button (Red)
-    IconButton(
-      icon: const Icon(Icons.delete, color: Colors.red),
-      onPressed: () {
-        String? propertyId = listing['id'];
-        if (propertyId != null && propertyId.isNotEmpty) {
-          _confirmDelete(propertyId);
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Invalid property ID')),
-          );
-        }
-      },
-    ),
-  ],
-),
-
-              ),
+                return Card(
+                  elevation: 2,
+                  margin: const EdgeInsets.symmetric(vertical: 10),
+                  child: ListTile(
+                    leading: listing['imageUrls'] != null &&
+                            (listing['imageUrls'] as List).isNotEmpty
+                        ? Image.network(
+                            listing['imageUrls'][0],
+                            width: 50,
+                            height: 50,
+                            fit: BoxFit.cover,
+                          )
+                        : const Icon(Icons.image_not_supported),
+                    title: Text(listing['name'] ?? 'No Title'),
+                    subtitle: Text("Price: \$${listing['price'] ?? 'N/A'}"),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (verifyStatus == 'pending')
+                          ElevatedButton(
+                            onPressed: null, // Disable the button
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.orange,
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 5),
+                            ),
+                            child: const Text(
+                              'Pending',
+                              style: TextStyle(color: Colors.white),
+                            ),
+                          )
+                        else if (verifyStatus == 'verified')
+                          const Icon(Icons.verified, color: Colors.green)
+                        else
+                          TextButton(
+                            onPressed: () async {
+                              String? propertyId = listing['id'];
+                              if (propertyId != null && propertyId.isNotEmpty) {
+                                await _fetchVerificationStatus(propertyId);
+                                _handleVerification(propertyId);
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                      content: Text('Invalid property ID')),
+                                );
+                              }
+                            },
+                            style: TextButton.styleFrom(
+                              backgroundColor: Colors.green,
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 5),
+                            ),
+                            child: const Text(
+                              'Verify',
+                              style: TextStyle(color: Colors.white),
+                            ),
+                          ),
+                        IconButton(
+                          icon: const Icon(Icons.delete, color: Colors.red),
+                          onPressed: () {
+                            String? propertyId = listing['id'];
+                            if (propertyId != null && propertyId.isNotEmpty) {
+                              _confirmDelete(propertyId);
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                    content: Text('Invalid property ID')),
+                              );
+                            }
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
             );
           }).toList(),
         )
       : _emptySection('No listings available'),
-
-
-            if (activeTab == 'Transaction') _emptySection('No Transactions available'),
+            if (activeTab == 'Transaction')
+              FutureBuilder<List<Map<String, dynamic>>>(
+                future: _getUserVerificationsWithListingNames(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  if (snapshot.hasError) {
+                    return _emptySection('Error loading verifications');
+                  }
+                  if (snapshot.hasData && snapshot.data!.isNotEmpty) {
+                    return SizedBox(
+                      height: 300,
+                      child: ListView.builder(
+                        itemCount: snapshot.data!.length,
+                        itemBuilder: (context, index) {
+                          return _buildVerificationItemWithListingName(snapshot.data![index]);
+                        },
+                      ),
+                    );
+                  } else {
+                    return _emptySection('No verifications requested');
+                  }
+                },
+              ),
             if (activeTab == 'Sold') _emptySection('No sold items yet'),
             if (activeTab == 'Reviews') _emptySection('No reviews yet'),
           ],
         ),
-      ),
-    );
-  }
-
-  void _showProfilePicture() {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return Dialog(
-          backgroundColor: Colors.transparent,
-          child: GestureDetector(
-            onTap: () => Navigator.pop(context),
-            child: Image.network(profileImageUrl ?? ''),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _emptySection(String message) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Text(message, style: const TextStyle(fontSize: 16, color: Colors.grey)),
       ),
     );
   }
