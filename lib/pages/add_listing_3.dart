@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:file_picker/file_picker.dart';
+import 'package:file_selector/file_selector.dart';
 import 'add_listing_4.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -33,16 +33,15 @@ class _AddListing3State extends State<AddListing3> {
   }
 
   Future<void> _pickAndUploadFile(bool isPlan) async {
-    FilePickerResult? result = await FilePicker.platform.pickFiles(
-      type: FileType.custom, 
-      allowedExtensions: ['pdf'],
-    );
-    
-    if (result != null) {
-      File file = File(result.files.single.path!);
+    final XFile? file = await openFile(acceptedTypeGroups: [
+      XTypeGroup(extensions: ['pdf'])
+    ]);
+
+    if (file != null) {
+      File localFile = File(file.path);
       String fileName = '${DateTime.now().millisecondsSinceEpoch}.pdf';
-      String? downloadUrl = await _uploadFile(file, fileName);
-      
+      String? downloadUrl = await _uploadFile(localFile, fileName);
+
       if (downloadUrl != null) {
         setState(() {
           if (isPlan) {
@@ -55,51 +54,46 @@ class _AddListing3State extends State<AddListing3> {
     }
   }
 
-void _handleNextButton() async {
-  if (_priceController.text.isEmpty || propertyPlanUrl == null || propertyDeedUrl == null) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Please complete all fields before proceeding.")),
-    );
-    return;
-  }
-
-  try {
-    // Get the latest listing document (assuming the previous step created one)
-    QuerySnapshot querySnapshot = await FirebaseFirestore.instance
-        .collection("Listings")
-        .orderBy("createdAt", descending: true)
-        .limit(1)
-        .get();
-
-    if (querySnapshot.docs.isNotEmpty) {
-      String listingId = querySnapshot.docs.first.id;
-
-      // Update the Firestore document with uploaded file URLs
-      await FirebaseFirestore.instance.collection("Listings").doc(listingId).update({
-        "price": _priceController.text,
-        "currency": _selectedCurrency,
-        "propertyPlanUrl": propertyPlanUrl,
-        "propertyDeedUrl": propertyDeedUrl,
-      });
-
-      // Navigate to the next step
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const AddListing4()),
-      );
-    } else {
-      print("❌ No listing found to update.");
+  void _handleNextButton() async {
+    if (_priceController.text.isEmpty || propertyPlanUrl == null || propertyDeedUrl == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("No listing found to update.")),
+        const SnackBar(content: Text("Please complete all fields before proceeding.")),
+      );
+      return;
+    }
+
+    try {
+      QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+          .collection("Listings")
+          .orderBy("createdAt", descending: true)
+          .limit(1)
+          .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        String listingId = querySnapshot.docs.first.id;
+
+        await FirebaseFirestore.instance.collection("Listings").doc(listingId).update({
+          "price": _priceController.text,
+          "currency": _selectedCurrency,
+          "propertyPlanUrl": propertyPlanUrl,
+          "propertyDeedUrl": propertyDeedUrl,
+        });
+
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const AddListing4()),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("No listing found to update.")),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error updating listing: $e")),
       );
     }
-  } catch (e) {
-    print("❌ Firestore Update Error: $e");
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("Error updating listing: $e")),
-    );
   }
-}
 
   @override
   Widget build(BuildContext context) {
@@ -116,7 +110,6 @@ void _handleNextButton() async {
             ),
             const SizedBox(height: 20),
 
-            // Sell Price Section
             const Text('Sell Price', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             const SizedBox(height: 10),
             Row(
@@ -125,14 +118,9 @@ void _handleNextButton() async {
                   child: TextFormField(
                     controller: _priceController,
                     keyboardType: TextInputType.number,
-                    decoration: InputDecoration(
+                    decoration: const InputDecoration(
                       hintText: 'Enter price',
-                      border: OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.blue), // Blue border
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.blue, width: 2), // Blue when focused
-                      ),
+                      border: OutlineInputBorder(),
                     ),
                   ),
                 ),
@@ -155,38 +143,29 @@ void _handleNextButton() async {
             ),
             const SizedBox(height: 20),
 
-            // Property Plan Section
             const Text('Add Property Plan', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             const SizedBox(height: 10),
             ElevatedButton.icon(
               onPressed: () => _pickAndUploadFile(true),
               icon: const Icon(Icons.upload, color: Colors.white),
               label: Text(propertyPlanUrl != null ? 'Uploaded' : 'Upload Property Plan'),
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
             ),
             const SizedBox(height: 20),
 
-            // Property Deed Section
             const Text('Add Property Deed', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             const SizedBox(height: 10),
             ElevatedButton.icon(
               onPressed: () => _pickAndUploadFile(false),
               icon: const Icon(Icons.upload, color: Colors.white),
               label: Text(propertyDeedUrl != null ? 'Uploaded' : 'Upload Property Deed'),
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
             ),
             const SizedBox(height: 20),
 
-            // Next Button
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: _handleNextButton,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  textStyle: const TextStyle(fontSize: 18),
-                ),
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.blue), // change button color to blue
                 child: const Text('Next', style: TextStyle(color: Colors.white)),
               ),
             ),
