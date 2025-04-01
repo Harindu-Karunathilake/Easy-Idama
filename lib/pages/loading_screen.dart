@@ -14,7 +14,7 @@ class _LoadingScreenState extends State<LoadingScreen> {
     super.initState();
 
     // Delay navigation to the Onboarding screen after 3 seconds
-    Future.delayed(const Duration(seconds: 5), () {
+    Future.delayed(const Duration(seconds: 1), () {
       if (mounted) {
         _navigateToOnboarding();
       }

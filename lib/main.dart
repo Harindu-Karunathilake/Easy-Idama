@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'pages/loading_screen.dart'; // Ensure this file exists
 import 'package:mad/providers/favourite_provider.dart';
+import 'package:mad/providers/property_provider.dart'; // Import the PropertyProvider
 import 'package:provider/provider.dart';
 
 void main() async {
@@ -26,9 +27,11 @@ void main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (context) => FavoritesProvider()),
+        ChangeNotifierProvider(create: (context) => PropertyProvider()), // Add PropertyProvider here
       ],
       child: MyApp(),
-    ),);
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -39,7 +42,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: ThemeData(fontFamily: 'Poppins'),
-      home:  LoadingScreen(), // ✅ Ensure LoadingScreen is the first screen
+      home: LoadingScreen(), // ✅ Ensure LoadingScreen is the first screen
     );
   }
 }
